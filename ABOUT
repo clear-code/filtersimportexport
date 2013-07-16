@@ -1,0 +1,8 @@
+All rights reserved by the creator Wind Li.
+-------------------------------------------
+This plugin simply allows compatibility with newer versions of Thunderbird. It is NOT approved by its author. Use it at YOUR own risk.
+I have tested it and at least it does work :)
+---------------------------------------------
+-Edited to support Mozilla Thunderbird major versions 6.x - 17.x
+ - Dropped deprecated minor versions.
+-Removed <em:file> as it not needed anymore.
