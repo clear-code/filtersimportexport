@@ -149,7 +149,7 @@ var filtersimportexport = {
             filterStr = this.consumeLine(filterStr);
             this.mergeHeaders(mailheaders);
         }
-        var reg = new RegExp(filtersimportexport.RootFolderUriMark,"g");
+        var reg = new RegExp(oldFolderRoot,"g");
         s = filterStr.replace(reg,msgFilterURL);
         filterList.saveToDefaultFile();
         if (filterList.defaultFile.nativePath)
