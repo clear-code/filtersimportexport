@@ -150,7 +150,7 @@ var filtersimportexport = {
             this.mergeHeaders(mailheaders);
         }
         var reg = new RegExp(oldFolderRoot,"g");
-        s = filterStr.replace(reg,msgFilterURL);
+        var outFilterStr = filterStr.replace(reg,msgFilterURL);
         filterList.saveToDefaultFile();
         if (filterList.defaultFile.nativePath)
             var stream = this.createFile(filterList.defaultFile.nativePath);
@@ -163,7 +163,7 @@ var filtersimportexport = {
         if (filterService && filterService.CloseFilterList)
             filterService.CloseFilterList(filterList);
         
-        stream.write(s, s.length);
+        stream.write(outFilterStr, outFilterStr.length);
         stream.close();
         
         //reopen filter list
