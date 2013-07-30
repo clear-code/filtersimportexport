@@ -150,7 +150,12 @@ var filtersimportexport = {
             this.mergeHeaders(mailheaders);
         }
         var reg = new RegExp(oldFolderRoot,"g");
-        var outFilterStr = filterStr.replace(reg,msgFilterURL);
+        var outFilterStr = filterStr;
+        if (oldFolderRoot != msgFilterURL &&
+            reg.test(filterStr) &&
+            window.confirm(this.getString("confirmMigrateActions"))) {
+          outFilterStr = filterStr.replace(reg,msgFilterURL);
+        }
         filterList.saveToDefaultFile();
         if (filterList.defaultFile.nativePath)
             var stream = this.createFile(filterList.defaultFile.nativePath);
@@ -170,7 +175,7 @@ var filtersimportexport = {
         filterList = this.currentFilterList(msgFolder,msgFilterURL);
         
         var confirmStr = "";
-        if (oldFolderRoot != msgFilterURL)
+        if (oldFolderRoot != msgFilterURL && outFilterStr != filterStr)
             confirmStr = this.getString("finishwithwarning");
         else
             confirmStr = this.getString("importfinish");
