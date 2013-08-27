@@ -1,21 +1,23 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
-<!DOCTYPE window SYSTEM "chrome://filtersimportexport/locale/FilterImEx.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://filtersimportexport/locale/FilterImEx.dtd">
 
-<window xmlns:nc="http://home.netscape.com/NC-rdf#" 
+<dialog xmlns:nc="http://home.netscape.com/NC-rdf#" 
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		title="&title.label;"
-		onload="filtersimportexport.onAccountLoad();">
+		onload="filtersimportexport.onAccountLoad();"
+		buttons="cancel">
   <script src="overlay.js"/>
   <stringbundleset id="filtersimportexportStringbundleset">
       <stringbundle id="filtersimportexportStrings" src="chrome://filtersimportexport/locale/filtersimportexport.properties"/>
   </stringbundleset>
-<vbox style="padding: 0.5em">
+<vbox>
 <description flex="1">&import.description1;</description>
 <description flex="1">&import.description2;</description>
 <description flex="1">&import.description3;</description>
 </vbox>
-<hbox align="center" style="padding: 0.5em">
+<spacer/>
+<hbox align="center">
   <description>&separate.label;</description>
       <menulist id="serverMenu"
           flex="1"
@@ -69,4 +71,4 @@
   <button label="&import.label;" oncommand="filtersimportexport.onImportFilter();"/>
 </hbox>
 
-</window>
+</dialog>
