@@ -402,7 +402,7 @@ var filtersimportexport = {
         var myPrefs = Components.classes["@mozilla.org/preferences-service;1"].
         getService(Components.interfaces.nsIPrefService).getBranch("extensions.FiltersImportExport@mozilla.org");
         try{
-            myPrefs=myPrefs.QueryInterface(Components.interfaces.nsIPrefBranch2);
+            myPrefs = myPrefs.QueryInterface(Components.interfaces.nsIPrefBranch2);
         }catch(e){}
         return myPrefs;
     },
@@ -411,7 +411,7 @@ var filtersimportexport = {
         var mailPrefs = Components.classes["@mozilla.org/preferences-service;1"].
         getService(Components.interfaces.nsIPrefService).getBranch("mailnews");
         try{
-            mailPrefs=mailPrefs.QueryInterface(Components.interfaces.nsIPrefBranch2);
+            mailPrefs = mailPrefs.QueryInterface(Components.interfaces.nsIPrefBranch2);
         }catch(e){}
         return mailPrefs;
     },
