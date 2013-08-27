@@ -165,9 +165,20 @@ var filtersimportexport = {
         var reg = new RegExp(oldFolderRoot,"g");
         var outFilterStr = filterStr;
         if (oldFolderRoot != msgFilterURL &&
-            reg.test(filterStr) &&
-            window.confirm(this.getString("confirmMigrateActions"))) {
-          outFilterStr = filterStr.replace(reg,msgFilterURL);
+            reg.test(filterStr)) {
+          var migrateAction = this.getMyPref().getIntPref(".migrateAction");
+          switch (migrateAction) {
+            case 0: // show confirmation
+              if (!window.confirm(this.getString("confirmMigrateActions")))
+                break;
+            case 1: // migrate
+              if (migrateAction == 1)
+                window.alert(this.getString("trymigration"));
+              outFilterStr = filterStr.replace(reg,msgFilterURL);
+              break;
+            default:
+              break;
+          }
         }
         filterList.saveToDefaultFile();
         if (filterList.defaultFile.nativePath)
@@ -385,6 +396,15 @@ var filtersimportexport = {
         // Append them to the end of the button box
         vboxElement.appendChild(exportButton);
     //    vboxElement.appendChild(importButton);
+    },
+    getMyPref: function()
+    {
+        var myPrefs = Components.classes["@mozilla.org/preferences-service;1"].
+        getService(Components.interfaces.nsIPrefService).getBranch("extensions.FiltersImportExport@mozilla.org");
+        try{
+            myPrefs=myPrefs.QueryInterface(Components.interfaces.nsIPrefBranch2);
+        }catch(e){}
+        return myPrefs;
     },
     getPref: function()
     {
