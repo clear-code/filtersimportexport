@@ -1,4 +1,7 @@
 <!ENTITY choosethisnewsserver.label "Zvolte poštovní účet:">
 <!ENTITY import.label "Importovat">
+<!ENTITY import.description1 "Choose the account which message filters to be imported to, and press the &quot;&import.label;&quot; button.">
+<!ENTITY import.description2 "Existing filters of the account will be completely replaced with imported filters.">
+<!ENTITY import.description3 "Export existing filters at first as a backup, if they need to be kept.">
 <!ENTITY separate.label "Zvolte poštovní účet:">
 <!ENTITY title.label "Import třídících filtrů">

@@ -9,10 +9,16 @@
   <script src="overlay.js"/>
   <stringbundleset id="filtersimportexportStringbundleset">
       <stringbundle id="filtersimportexportStrings" src="chrome://filtersimportexport/locale/filtersimportexport.properties"/>
-  </stringbundleset>		
-<hbox align="center">
-  <description flex="1">&separate.label;</description>
+  </stringbundleset>
+<vbox style="padding: 0.5em">
+<description flex="1">&import.description1;</description>
+<description flex="1">&import.description2;</description>
+<description flex="1">&import.description3;</description>
+</vbox>
+<hbox align="center" style="padding: 0.5em">
+  <description>&separate.label;</description>
       <menulist id="serverMenu"
+          flex="1"
           datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
           sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
           sortDirection="ascending"

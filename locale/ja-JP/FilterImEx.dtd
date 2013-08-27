@@ -1,4 +1,7 @@
 <!ENTITY choosethisnewsserver.label "アカウント選択:">
 <!ENTITY import.label "読み込む">
-<!ENTITY separate.label "アカウント選択:">
+<!ENTITY import.description1 "メッセージフィルタの読み込み先アカウントを選択して「&import.label;」ボタンを押下してください。">
+<!ENTITY import.description2 "選択されたアカウントのメッセージフィルタは、読み込んだメッセージフィルタにより置き換えられます。">
+<!ENTITY import.description3 "現在のメッセージフィルタを残す場合は、先に書き出しを行なってバックアップを作成してください。">
+<!ENTITY separate.label "アカウント:">
 <!ENTITY title.label "メッセージフィルタの読み込み">

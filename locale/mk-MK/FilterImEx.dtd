@@ -1,4 +1,7 @@
 <!ENTITY choosethisnewsserver.label "Избери Сметка:">
 <!ENTITY import.label "Внеси">
+<!ENTITY import.description1 "Choose the account which message filters to be imported to, and press the &quot;&import.label;&quot; button.">
+<!ENTITY import.description2 "Existing filters of the account will be completely replaced with imported filters.">
+<!ENTITY import.description3 "Export existing filters at first as a backup, if they need to be kept.">
 <!ENTITY separate.label "Избери Сметка:">
 <!ENTITY title.label "Внеси ги филтерите на пораките">
