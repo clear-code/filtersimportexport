@@ -63,6 +63,19 @@ var filtersimportexport = {
             return "";
         }
     },
+    getFormattedString:function (name, args)
+    {
+        try{
+        
+            if (this.strbundle == null)
+                this.strbundle = document.getElementById("filtersimportexportStrings");
+            return this.strbundle.getFormattedString(name, args);
+        }catch(e)
+        {
+            alert(name + " " + e);
+            return "";
+        }
+    },
     onAccountLoad: function() {
         // initialization code
         var firstItem = filtersimportexport.getServerThatCanHaveFilters();
@@ -278,7 +291,7 @@ var filtersimportexport = {
         //alert(data);
         stream.write(data,data.length);
         stream.close();
-       alert("Filters saved to: " + path);
+       alert(this.getFormattedString("exportfinish", [path]));
     },
     tryExportTags:function (filtersStr) {
         filtersStr += filtersimportexport.MailnewsTagsMark + "=\n";
