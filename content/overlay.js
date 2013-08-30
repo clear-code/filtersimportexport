@@ -162,24 +162,9 @@ var filtersimportexport = {
             filterStr = this.consumeLine(filterStr);
             this.mergeHeaders(mailheaders);
         }
-        var reg = new RegExp(oldFolderRoot,"g");
-        var outFilterStr = filterStr;
-        if (oldFolderRoot != msgFilterURL &&
-            reg.test(filterStr)) {
-          var migrateAction = this.getMyPref().getIntPref(".migrateAction");
-          switch (migrateAction) {
-            case 0: // show confirmation
-              if (!window.confirm(this.getString("confirmMigrateActions")))
-                break;
-            case 1: // migrate
-              if (migrateAction == 1)
-                window.alert(this.getString("trymigration"));
-              outFilterStr = filterStr.replace(reg,msgFilterURL);
-              break;
-            default:
-              break;
-          }
-        }
+
+        var outFilterStr = this.getOutFilter(filterStr, oldFolderRoot, msgFilterURL);
+
         filterList.saveToDefaultFile();
         if (filterList.defaultFile.nativePath)
             var stream = this.createFile(filterList.defaultFile.nativePath);
@@ -258,6 +243,27 @@ var filtersimportexport = {
 			prefs.savePrefFile(null);
         }
         return str;
+    },
+    getOutFilter: function(filterStr, oldFolderRoot, newFolderRoot) {
+        var reg = new RegExp(oldFolderRoot,"g");
+        if (oldFolderRoot == newFolderRoot ||
+            !reg.test(filterStr))
+            return filterStr;
+
+        var migrateAction = this.getMyPref().getIntPref(".migrateAction");
+        switch (migrateAction) {
+          case 0: // show confirmation
+            if (!window.confirm(this.getString("confirmMigrateActions")))
+                break;
+          case 1: // migrate
+            if (migrateAction == 1)
+                window.alert(this.getString("trymigration"));
+            return filterStr.replace(reg, newFolderRoot);
+          default:
+            break;
+        }
+
+        return filterStr;
     },
     getLine: function(str) {
         return str.substr(0, str.indexOf("\n"));
