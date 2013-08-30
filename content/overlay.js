@@ -50,6 +50,18 @@ var filtersimportexport = {
         this.initialized = true;
         
     },
+    alert : function(title, message)
+    {
+        var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+        .getService(Components.interfaces.nsIPromptService);
+        prompts.alert(window, title, message);
+    },
+    confirm: function(title, message)
+    {
+        var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+        .getService(Components.interfaces.nsIPromptService);
+        return prompts.confirm(window, title, message);
+    },
     getString:function (name)
     {
         try{
@@ -141,14 +153,14 @@ var filtersimportexport = {
         var filterStr = this.tryImportTags(tagsAndFilterStr);
         if (filterStr == null)
         {
-            alert(this.getString("importfailed"));
+            this.alert(this.getString("importfailedTitle"), this.getString("importfailed"));
             return;
         }
         
         // read filters.
         if (filterStr.substr(0,filtersimportexport.RootFolderUriMark.length) != filtersimportexport.RootFolderUriMark)
         {
-            alert(this.getString("importfailed"));
+            this.alert(this.getString("importfailedTitle"), this.getString("importfailed"));
             return;
         }
         var oldFolderRoot = filterStr.substr(filtersimportexport.RootFolderUriMark.length + 1,filterStr.indexOf("\n") - filterStr.indexOf("=") -1);
@@ -192,13 +204,13 @@ var filtersimportexport = {
         else
             confirmStr = this.getString("importfinish");
     
-        if (confirm(confirmStr + this.getString("restartconfrim")))
+        if (this.confirm(this.getString("restartconfrimTitle"), confirmStr + this.getString("restartconfrim")))
         {
             var nsIAppStartup = Components.interfaces.nsIAppStartup;
             Components.classes["@mozilla.org/toolkit/app-startup;1"].getService(nsIAppStartup).quit(nsIAppStartup.eForceQuit | nsIAppStartup.eRestart);
         }
         else
-            alert(this.getString("restartreminder"));
+            this.alert(this.getString("restartreminderTitle"), this.getString("restartreminder"));
     },
     readTagsAndFiltersFile: function() {
         var filepath = this.selectFile(Components.interfaces.nsIFilePicker.modeOpen);
@@ -256,11 +268,11 @@ var filtersimportexport = {
         var migrateAction = this.getMyPref().getIntPref(".migrateAction");
         switch (migrateAction) {
           case 0: // show confirmation
-            if (!window.confirm(this.getString("confirmMigrateActions")))
+            if (!this.confirm(this.getString("confirmMigrateActionsTitle"), this.getString("confirmMigrateActions")))
                 break;
           case 1: // migrate
             if (migrateAction == 1)
-                window.alert(this.getString("trymigration"));
+                this.alert(this.getString("trymigrationTitle"), this.getString("trymigration"));
             return filterStr.replace(reg, newFolderRoot);
           default:
             break;
@@ -419,7 +431,7 @@ var filtersimportexport = {
         //alert(data);
         stream.write(data,data.length);
         stream.close();
-       alert(this.getFormattedString("exportfinish", [path]));
+        this.alert(this.getString("exportfinishTitle"), this.getFormattedString("exportfinish", [path]));
     },
     tryExportTags:function (filtersStr) {
         filtersStr += filtersimportexport.MailnewsTagsMark + "=\n";
