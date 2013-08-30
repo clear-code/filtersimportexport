@@ -286,37 +286,51 @@ var filtersimportexport = {
         var allNames = dangerousFiltersByURL.all;
         delete dangerousFiltersByURL.all;
 
-        function checkFolders(folders) {
+        function checkFolders(folders, root) {
             if (!folders)
                 return;
             try {
                 var folder;
                 while (folders.hasMoreElements()) {
                     folder = folders.getNext().QueryInterface(Components.interfaces.nsIMsgFolder);
-                    checkFolder(folder);
+                    checkFolder(folder, root);
                 }
             } catch(error) {
                 Components.utils.reportError(error);
             }
         }
 
-        function checkFolder(folder) {
+        function checkFolder(folder, root) {
             var url = unescape(folder.folderURL);
+            if (root && root in serverRoots)
+                url = url.replace(root, serverRoots[root]);
+            // Application.console.log('folderURL = '+url);
             if (url in dangerousFiltersByURL)
                 delete dangerousFiltersByURL[url];
-            checkFolders(folder.subFolders);
+            checkFolders(folder.subFolders, root);
         }
 
+        var serverRoots = {};
         this.getAllAccounts().forEach(function processAccount(account) {
             account = account.QueryInterface(Components.interfaces.nsIMsgAccount);
             var server = account.incomingServer;
             var type = server.type;
-            if (/^(pop3|imap|none)$/.test(type))
-                checkFolders(server.rootFolder.subFolders);
+            if (/^(pop3|imap|none)$/.test(type)) {
+                var root;
+                try {
+                    root = unescape(server.rootFolder.folderURL);
+                    serverRoots[root] = server.serverURI + '/';
+                    // Application.console.log(root+' => '+serverRoots[root]);
+                } catch(error) {
+                    Components.utils.reportError(server.serverURI + '\n' + error);
+                }
+                checkFolders(server.rootFolder.subFolders, root);
+            }
         }, this);
 
         var dangerousFilters = {};
         Object.keys(dangerousFiltersByURL).forEach(function(url) {
+            // Application.console.log('DANGEROUS \n'+url);
             dangerousFiltersByURL[url].forEach(function(filterName) {
                 dangerousFilters[filterName] = true;
             });
