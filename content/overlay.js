@@ -326,6 +326,11 @@ var filtersimportexport = {
         }
     },
     collectFilterNamesForURLs: function(filterStr) {
+        var UConv = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+        .getService(Components.interfaces.nsIScriptableUnicodeConverter);
+        UConv.charset = "UTF-8";
+        filterStr = UConv.ConvertToUnicode(filterStr);
+
         var filterNamesForURLs = {};
 
         var nameLineMatcher = /^name=["'](.+)["']$/;
