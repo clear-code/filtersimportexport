@@ -340,8 +340,8 @@ var filtersimportexport = {
             var actionValueLineMatchResult = line.match(actionValueLineMatcher);
             if (actionValueLineMatchResult) {
                 var url = actionValueLineMatchResult[1];
-                filterNamesForURL[url] = filterNamesForURL[url] || [];
-                filterNamesForURL[url].push(lastFilterName);
+                filterNamesForURLs[url] = filterNamesForURLs[url] || [];
+                filterNamesForURLs[url].push(lastFilterName);
                 return;
             }
         });
