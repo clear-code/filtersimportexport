@@ -165,6 +165,9 @@ var filtersimportexport = {
 
         var outFilterStr = this.getOutFilter(filterStr, oldFolderRoot, msgFilterURL);
 
+        if (!this.canImportFilter(outFilterStr))
+            return;
+
         filterList.saveToDefaultFile();
         if (filterList.defaultFile.nativePath)
             var stream = this.createFile(filterList.defaultFile.nativePath);
@@ -264,6 +267,102 @@ var filtersimportexport = {
         }
 
         return filterStr;
+    },
+    canImportFilter: function(filterStr) {
+        var dangerousFiltersByURL = this.collectFilterNamesForURLs(filterStr);
+
+        function checkFolders(folders) {
+            if (!folders)
+                return;
+            try {
+                var folder;
+                while (folders.hasMoreElements()) {
+                    folder = folders.getNext().QueryInterface(Components.interfaces.nsIMsgFolder);
+                    checkFolder(folder);
+                }
+            } catch(error) {
+                Components.utils.reportError(error);
+            }
+        }
+
+        function checkFolder(folder) {
+            var url = folder.folderURL;
+            if (url in dangerousFiltersByURL)
+                delete dangerousFiltersByURL[url];
+            checkFolders(folder.subFolders);
+        }
+
+        this.getAllAccounts().forEach(function processAccount(account) {
+            account = account.QueryInterface(Components.interfaces.nsIMsgAccount);
+            var server = account.incomingServer;
+            var type = server.type;
+            if (/^(pop3|imap|none)$/.test(type))
+                checkFolders(server.rootFolder.subFolders);
+        }, this);
+
+        var dangerousFilters = {};
+        Object.keys(dangerousFiltersByURL).forEach(function(url) {
+            dangerousFiltersByURL[url].forEach(function(filterName) {
+                dangerousFilters[filterName] = true;
+            });
+        });
+        dangerousFilters = Object.keys(dangerousFilters).sort();
+
+        if (!dangerousFilters.length)
+            return true;
+
+        dangerousFilters = "\n" + dangerousFilters.join("\n");
+
+        var missingDestinationAction = this.getMyPref().getIntPref(".missingDestinationAction");
+        switch (missingDestinationAction) {
+          case 1: // Import as they are
+            alert(this.getString("missingDestinationAccept") + dangerousFilters);
+            return true;
+          case 2: // Don't import
+            alert(this.getString("missingDestinationCancel") + dangerousFilters);
+            return false;
+          default: // Otherwise, show confirmation
+            return confirm(this.getString("missingDestinationConfirm") + dangerousFilters);
+        }
+    },
+    collectFilterNamesForURLs: function(filterStr) {
+        var filterNamesForURLs = {};
+
+        var nameLineMatcher = /^name=["'](.+)["']$/;
+        var actionValueLineMatcher = /^actionValue=["']((?:imap|mailbox):.+)["']$/;
+        var lastFilterName;
+        filterStr.split(/[\r\n]+/).forEach(function(line) {
+            var nameLineMatchResult = line.match(nameLineMatcher);
+            if (nameLineMatchResult) {
+                lastFilterName = nameLineMatchResult[1];
+                return;
+            }
+            var actionValueLineMatchResult = line.match(actionValueLineMatcher);
+            if (actionValueLineMatchResult) {
+                var url = actionValueLineMatchResult[1];
+                filterNamesForURL[url] = filterNamesForURL[url] || [];
+                filterNamesForURL[url].push(lastFilterName);
+                return;
+            }
+        });
+
+        return filterNamesForURLs;
+    },
+    getAllAccounts: function() {
+        var accountManager = Components.classes['@mozilla.org/messenger/account-manager;1']
+        .getService(Components.interfaces.nsIMsgAccountManager);
+        var accounts = accountManager.accounts;
+        var accountsArray = [];
+        if (accounts instanceof Components.interfaces.nsISupportsArray) {
+            for (var i = 0, maxi = accounts.Count(); i < maxi; i++) {
+                accountsArray.push(accounts.GetElementAt(i));
+            }
+        } else if (accounts instanceof Components.interfaces.nsIArray) {
+            for (var i = 0, maxi = accounts.length; i < maxi; i++) {
+                accountsArray.push(accounts.queryElementAt(i));
+            }
+        }
+        return accountsArray;
     },
     getLine: function(str) {
         return str.substr(0, str.indexOf("\n"));
