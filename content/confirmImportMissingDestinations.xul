@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<!DOCTYPE dialog SYSTEM "chrome://filtersimportexport/locale/FilterImEx.dtd">
+
+<dialog xmlns:nc="http://home.netscape.com/NC-rdf#" 
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		title="&title.label;"
+		buttons="accept,cancel"
+		ondialogaccept="onAccept();">
+  <script src="overlay.js"/>
+  <script src="confirmImportMissingDestinations.js"/>
+  <stringbundleset id="filtersimportexportStringbundleset">
+      <stringbundle id="filtersimportexportStrings" src="chrome://filtersimportexport/locale/filtersimportexport.properties"/>
+  </stringbundleset>
+  <description id="message" flex="1" style="max-width: 30em"/>
+  <textbox id="filters" readonly="true" multiline="true" rows="15"/>
+</dialog>

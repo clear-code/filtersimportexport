@@ -316,19 +316,18 @@ var filtersimportexport = {
         if (!dangerousFilters.length)
             return true;
 
-        dangerousFilters = "\n" + dangerousFilters.join("\n");
-
-        var missingDestinationAction = this.getMyPref().getIntPref(".missingDestinationAction");
-        switch (missingDestinationAction) {
-          case 1: // Import as they are
-            alert(this.getString("missingDestinationAccept") + dangerousFilters);
-            return true;
-          case 2: // Don't import
-            alert(this.getString("missingDestinationCancel") + dangerousFilters);
-            return false;
-          default: // Otherwise, show confirmation
-            return confirm(this.getString("missingDestinationConfirm") + dangerousFilters);
-        }
+        var accept = false;
+        window.openDialog(
+          "chrome://filtersimportexport/content/confirmImportMissingDestinations.xul",
+          "_blank",
+          "chrome,all,dialog,modal,centerscreen",
+          this.getMyPref().getIntPref(".missingDestinationAction"),
+          dangerousFilters.join("\n"),
+          function() {
+            accept = true;
+          }
+        );
+        return accept;
     },
     collectFilterNamesForURLs: function(filterStr) {
         var UConv = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
