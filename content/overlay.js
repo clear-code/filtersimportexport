@@ -319,7 +319,7 @@ var filtersimportexport = {
                 var root;
                 try {
                     root = unescape(server.rootFolder.folderURL);
-                    serverRoots[root] = server.serverURI + '/';
+                    serverRoots[root] = unescape(server.serverURI) + '/';
                     // Application.console.log(root+' => '+serverRoots[root]);
                 } catch(error) {
                     Components.utils.reportError(server.serverURI + '\n' + error);
@@ -377,6 +377,7 @@ var filtersimportexport = {
             var actionValueLineMatchResult = line.match(actionValueLineMatcher);
             if (actionValueLineMatchResult) {
                 var url = actionValueLineMatchResult[1];
+                url = unescape(url);
                 filterNamesForURLs[url] = filterNamesForURLs[url] || [];
                 filterNamesForURLs[url].push(lastFilterName);
                 return;
