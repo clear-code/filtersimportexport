@@ -286,7 +286,7 @@ var filtersimportexport = {
         }
 
         function checkFolder(folder) {
-            var url = folder.folderURL;
+            var url = unescape(folder.folderURL);
             if (url in dangerousFiltersByURL)
                 delete dangerousFiltersByURL[url];
             checkFolders(folder.subFolders);
