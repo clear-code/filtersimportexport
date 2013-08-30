@@ -271,6 +271,9 @@ var filtersimportexport = {
     canImportFilter: function(filterStr) {
         var dangerousFiltersByURL = this.collectFilterNamesForURLs(filterStr);
 
+        var allNames = dangerousFiltersByURL.all;
+        delete dangerousFiltersByURL.all;
+
         function checkFolders(folders) {
             if (!folders)
                 return;
@@ -306,7 +309,9 @@ var filtersimportexport = {
                 dangerousFilters[filterName] = true;
             });
         });
-        dangerousFilters = Object.keys(dangerousFilters).sort();
+        dangerousFilters = allNames.filter(function(name) {
+            return name in dangerousFilters;
+        });
 
         if (!dangerousFilters.length)
             return true;
@@ -332,6 +337,7 @@ var filtersimportexport = {
         filterStr = UConv.ConvertToUnicode(filterStr);
 
         var filterNamesForURLs = {};
+        var allNames = [];
 
         var nameLineMatcher = /^name=["'](.+)["']$/;
         var actionValueLineMatcher = /^actionValue=["']((?:imap|mailbox):.+)["']$/;
@@ -340,6 +346,7 @@ var filtersimportexport = {
             var nameLineMatchResult = line.match(nameLineMatcher);
             if (nameLineMatchResult) {
                 lastFilterName = nameLineMatchResult[1];
+                allNames.push(lastFilterName);
                 return;
             }
             var actionValueLineMatchResult = line.match(actionValueLineMatcher);
@@ -351,6 +358,7 @@ var filtersimportexport = {
             }
         });
 
+        filterNamesForURLs.all = allNames;
         return filterNamesForURLs;
     },
     getAllAccounts: function() {
