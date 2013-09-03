@@ -42,7 +42,7 @@ if (typeof window == 'undefined' ||
 }
 
 (function() {
-	const currentRevision = 11;
+	const currentRevision = 12;
 
 	if (!('piro.sakura.ne.jp' in window)) window['piro.sakura.ne.jp'] = {};
 
@@ -154,7 +154,8 @@ if (typeof window == 'undefined' ||
 		{
 			var foundChildren = {};
 			var possibleChildren = [];
-			var actualChildren = this.getDescendant(aRoot, aBranch)
+			var actualChildren = [];
+			this.getDescendant(aRoot, aBranch)
 					.forEach(function(aPrefstring) {
 						var name = aPrefstring.replace(aRoot, '');
 						if (name.charAt(0) == '.')
