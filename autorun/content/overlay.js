@@ -27,8 +27,18 @@ var filtersimportexportAutorun = {
       if (!fromAccount || !toAccount)
         return;
 
-      if (this.migrate(fromAccount, toAccount, migrateAction))
-        requireRestart = true;
+      var doneAccounts = this.prefs.getPref(base + '.done') || '';
+      doneAccounts = doneAccounts.split(',');
+      if (doneAccounts.indexOf(fromAccount.key + '=>' + toAccount.key) > -1)
+        return;
+
+      if (!this.migrate(fromAccount, toAccount, migrateAction))
+        return;
+
+      doneAccounts.push(toAccount.key);
+      this.prefs.setPref(base + '.done', doneAccounts.join(','));
+
+      requireRestart = true;
     }, this);
 
     if (requireRestart) {
