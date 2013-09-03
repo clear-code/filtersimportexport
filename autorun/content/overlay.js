@@ -38,13 +38,15 @@ var filtersimportexportAutorun = {
 
       var doneAccounts = this.prefs.getPref(base + '.done') || '';
       doneAccounts = doneAccounts.split(',');
-      if (doneAccounts.indexOf(fromAccount.key + '=>' + toAccount.key) > -1)
+      var accountsPair = fromAccount.key + '=>' + toAccount.key;
+      if (doneAccounts.indexOf(accountsPair) > -1)
         return;
 
+//alert('filtersimportexportAutorun: ' + accountsPair);
       if (!this.migrate(fromAccount, toAccount, migrateAction))
         return;
 
-      doneAccounts.push(toAccount.key);
+      doneAccounts.push(accountsPair);
       this.prefs.setPref(base + '.done', doneAccounts.join(','));
 
       requireRestart = true;
