@@ -6,11 +6,11 @@
 // pref("extensions.filtersimportexport-autorun@clear-code.com.rules.KEY", true);
 // // export source
 // pref("extensions.filtersimportexport-autorun@clear-code.com.rules.KEY.from",
-//      "accountName:user@example.com"); // by the name
+//      "prettyName = /^foobar's account$/i"); // by the name
 // pref("extensions.filtersimportexport-autorun@clear-code.com.rules.KEY.from",
-//      "incomingServer:user@example.com"); // by the incoming server
+//      "incomingServer.serverURI = imap://username@example.com"); // by the incoming server
 // pref("extensions.filtersimportexport-autorun@clear-code.com.rules.KEY.from",
-//      "none@Local Folder"); // local folder account
+//      "incomingServer.serverURI = mailbox://nobody@Local%20Folders"); // local folder account
 // // import target
 // pref("extensions.filtersimportexport-autorun@clear-code.com.rules.KEY.to",
 //      "incomingServer:user@example.com"); // the format is same to "from"
