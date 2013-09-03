@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var filtersimportexportAutorun = {
+  ROOT: 'extensions.filtersimportexport-autorun@clear-code.com.',
+
   get prefs() {
     delete this.prefs;
     var ns = {};
@@ -11,8 +13,31 @@ var filtersimportexportAutorun = {
   },
 
   run: function filtersimportexportAutorun_run() {
-  },
+    var requireRestart = false;
 
+    this.prefs.getChildren(this.ROOT + 'rules.').forEach(function(base) {
+      if (!this.prefs.getPref(base))
+        return;
+
+      var fromAccountSelector  = this.prefs.getPref(base + '.from');
+      var fromAccount          = this.findAccount(fromAccountSelector);
+      var toAccountSelector    = this.prefs.getPref(base + '.to');
+      var toAccount            = this.findAccount(toAccountSelector);
+      var migrateAction        = this.prefs.getPref(base + '.migrateAction');
+      if (!fromAccount || !toAccount)
+        return;
+
+      if (this.migrate(fromAccount, toAccount, migrateAction))
+        requireRestart = true;
+    }, this);
+
+    if (requireRestart) {
+      var nsIAppStartup = Components.interfaces.nsIAppStartup;
+      Components.classes['@mozilla.org/toolkit/app-startup;1']
+        .getService(nsIAppStartup)
+        .quit(nsIAppStartup.eForceQuit | nsIAppStartup.eRestart);
+    }
+  },
 
   createTemporaryFile: function filtersimportexportAutorun_createTemporaryFile(basename) {
     Components.utils.import('resource://gre/modules/FileUtils.jsm');
@@ -36,5 +61,4 @@ var filtersimportexportAutorun = {
       filter.remove(true);
     }
   }
-
 };
