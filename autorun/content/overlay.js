@@ -8,7 +8,7 @@ var filtersimportexportAutorun = {
   get prefs() {
     delete this.prefs;
     var ns = {};
-    Components.utils.import('resource://folderstatistics-modules/prefs.js', ns);
+    Components.utils.import('resource://filtersimportexport-autorun-modules/prefs.js', ns);
     return this.prefs = ns.prefs;
   },
 
