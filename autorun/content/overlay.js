@@ -11,5 +11,30 @@ var filtersimportexportAutorun = {
   },
 
   run: function filtersimportexportAutorun_run() {
+  },
+
+
+  createTemporaryFile: function filtersimportexportAutorun_createTemporaryFile(basename) {
+    Components.utils.import('resource://gre/modules/FileUtils.jsm');
+    var file = FileUtils.getFile('TmpD', [basename]);
+    file.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+    return file;
+  },
+
+  migrate: function filtersimportexportAutorun_migrate(fromAccount, toAccount, migrateAction) {
+    var file = this.createTemporaryFile('filtersimportexport-autorun-filter');
+    try {
+      filtersimportexport.exportFilterTo(fromAccount, file);
+      var converted = filtersimportexport.importFilterFrom(toAccount, file, {
+        silent: true,
+        migrateAction: migrateAction
+      });
+      return true;
+    } catch(error) {
+      return false;
+    } finally {
+      filter.remove(true);
+    }
   }
+
 };
