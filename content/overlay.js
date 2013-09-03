@@ -140,27 +140,42 @@ var filtersimportexport = {
         return msgFolder;
     },
     onImportFilter: function() {
-        
         var msgFolder = filtersimportexport.getCurrentFolder();
+        var file = this.selectFile(Components.interfaces.nsIFilePicker.modeOpen);
+        var converted = this.importFilterFrom(msgFolder, file);
+
+        var confirmStr = "";
+        if (converted)
+            confirmStr = this.getString("finishwithwarning");
+        else
+            confirmStr = this.getString("importfinish");
+    
+        if (this.confirm(this.getString("restartconfrimTitle"), confirmStr + this.getString("restartconfrim")))
+        {
+            var nsIAppStartup = Components.interfaces.nsIAppStartup;
+            Components.classes["@mozilla.org/toolkit/app-startup;1"].getService(nsIAppStartup).quit(nsIAppStartup.eForceQuit | nsIAppStartup.eRestart);
+        }
+        else
+            this.alert(this.getString("restartreminderTitle"), this.getString("restartreminder"));
+    },
+    importFilterFrom: function(msgFolder, file, options) {
+        options = options || {};
         var msgFilterURL = msgFolder.URI;
         
 		var filterList = this.currentFilterList(msgFolder,msgFilterURL);
         filterList.saveToDefaultFile();
         
-        var tagsAndFilterStr = this.readTagsAndFiltersFile();
+        var tagsAndFilterStr = this.readTagsAndFiltersFile(file, options.silent);
         
         // read all tags line-by-line and save them.
         var filterStr = this.tryImportTags(tagsAndFilterStr);
-        if (filterStr == null)
+        if (filterStr === null ||
+            filterStr.substr(0,filtersimportexport.RootFolderUriMark.length) != filtersimportexport.RootFolderUriMark)
         {
-            this.alert(this.getString("importfailedTitle"), this.getString("importfailed"));
-            return;
-        }
-        
-        // read filters.
-        if (filterStr.substr(0,filtersimportexport.RootFolderUriMark.length) != filtersimportexport.RootFolderUriMark)
-        {
-            this.alert(this.getString("importfailedTitle"), this.getString("importfailed"));
+            if (silent)
+                Components.utils.reportError(new Error(this.getString("importfailed")));
+            else
+                this.alert(this.getString("importfailedTitle"), this.getString("importfailed"));
             return;
         }
         var oldFolderRoot = filterStr.substr(filtersimportexport.RootFolderUriMark.length + 1,filterStr.indexOf("\n") - filterStr.indexOf("=") -1);
@@ -175,9 +190,9 @@ var filtersimportexport = {
             this.mergeHeaders(mailheaders);
         }
 
-        var outFilterStr = this.getOutFilter(filterStr, oldFolderRoot, msgFilterURL);
+        var outFilterStr = this.getOutFilter(filterStr, oldFolderRoot, msgFilterURL, options);
 
-        if (!this.canImportFilter(outFilterStr))
+        if (!options.silent && !this.canImportFilter(outFilterStr))
             return;
 
         filterList.saveToDefaultFile();
@@ -197,23 +212,11 @@ var filtersimportexport = {
         
         //reopen filter list
         filterList = this.currentFilterList(msgFolder,msgFilterURL);
-        
-        var confirmStr = "";
-        if (oldFolderRoot != msgFilterURL && outFilterStr != filterStr)
-            confirmStr = this.getString("finishwithwarning");
-        else
-            confirmStr = this.getString("importfinish");
-    
-        if (this.confirm(this.getString("restartconfrimTitle"), confirmStr + this.getString("restartconfrim")))
-        {
-            var nsIAppStartup = Components.interfaces.nsIAppStartup;
-            Components.classes["@mozilla.org/toolkit/app-startup;1"].getService(nsIAppStartup).quit(nsIAppStartup.eForceQuit | nsIAppStartup.eRestart);
-        }
-        else
-            this.alert(this.getString("restartreminderTitle"), this.getString("restartreminder"));
+
+        var converted = oldFolderRoot != msgFilterURL && outFilterStr != filterStr;
+        return converted;
     },
-    readTagsAndFiltersFile: function() {
-        var file = this.selectFile(Components.interfaces.nsIFilePicker.modeOpen);
+    readTagsAndFiltersFile: functionfile() {
         var inputStream = this.openFile(file.path);
         var sstream = Components.classes["@mozilla.org/scriptableinputstream;1"]
         .createInstance(Components.interfaces.nsIScriptableInputStream);
@@ -259,19 +262,22 @@ var filtersimportexport = {
         }
         return str;
     },
-    getOutFilter: function(filterStr, oldFolderRoot, newFolderRoot) {
+    getOutFilter: function(filterStr, oldFolderRoot, newFolderRoot, options) {
+        options = options || {};
         var reg = new RegExp(oldFolderRoot,"g");
         if (oldFolderRoot == newFolderRoot ||
             !reg.test(filterStr))
             return filterStr;
 
-        var migrateAction = this.getMyPref().getIntPref(".migrateAction");
+        var useGivenOption = 'migrateAction' in options;
+        var migrateAction = useGivenOption ? options.migrateAction : this.getMyPref().getIntPref(".migrateAction");
         switch (migrateAction) {
           case 0: // show confirmation
-            if (!this.confirm(this.getString("confirmMigrateActionsTitle"), this.getString("confirmMigrateActions")))
+            if (!useGivenOption &&
+                !this.confirm(this.getString("confirmMigrateActionsTitle"), this.getString("confirmMigrateActions")))
                 break;
           case 1: // migrate
-            if (migrateAction == 1)
+            if (!useGivenOption && migrateAction == 1)
                 this.alert(this.getString("trymigrationTitle"), this.getString("trymigration"));
             return filterStr.replace(reg, newFolderRoot);
           default:
