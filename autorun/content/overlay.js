@@ -58,6 +58,36 @@ var filtersimportexportAutorun = {
     }
   },
 
+  findAccount: function filtersimportexportAutorun_findAccount(selector) {
+    var propertyNamePartMatcher = /^\s*([^\s]+)\s*=\s*/;
+    var propertyGetter = selector.match(propertyNamePartMatcher);
+    propertyGetter = propertyGetter && propertyGetter[1];
+    propertyGetter = propertyGetter.split('.');
+
+    var value = selector.replace(propertyNamePartMatcher, '').replace(/\s+$/, '');
+    var pattern = null;
+    if (value.charAt(0) == '/') {
+      pattern = value.replace(/^\/|\/([gim]*)$/, '');
+      pattern = new RegExp(pattern, RegExp.$1);
+      value = null;
+    }
+
+    var foundAccount;
+    filtersimportexport.getAllAccounts().some(function processAccount(account) {
+      var target = account;
+      propertyGetter.forEach(function(getter) {
+        target = target[getter];
+      });
+      if (!target)
+        return;
+
+      if ((value && target == value) ||
+          (pattern && pattern.test(value)))
+        return foundAccount = account;
+    }, this);
+    return foundAccount;
+  },
+
   createTemporaryFile: function filtersimportexportAutorun_createTemporaryFile(basename) {
     Components.utils.import('resource://gre/modules/FileUtils.jsm');
     var file = FileUtils.getFile('TmpD', [basename]);
@@ -68,8 +98,8 @@ var filtersimportexportAutorun = {
   migrate: function filtersimportexportAutorun_migrate(fromAccount, toAccount, migrateAction) {
     var file = this.createTemporaryFile('filtersimportexport-autorun-filter');
     try {
-      filtersimportexport.exportFilterTo(fromAccount, file);
-      var converted = filtersimportexport.importFilterFrom(toAccount, file, {
+      filtersimportexport.exportFilterTo(fromAccount.rootFolder, file);
+      var converted = filtersimportexport.importFilterFrom(toAccount.rootFolder, file, {
         silent: true,
         migrateAction: migrateAction
       });
