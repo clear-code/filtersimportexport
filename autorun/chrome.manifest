@@ -1,2 +1,5 @@
 content        filtersimportexport-autorun        content/
+
 overlay        chrome://messenger/content/messenger.xul        chrome://filtersimportexport-autorun/content/overlay.xul
+
+resource filtersimportexport-autorun-modules modules/
