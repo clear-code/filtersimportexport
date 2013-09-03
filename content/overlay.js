@@ -410,14 +410,14 @@ var filtersimportexport = {
         return str.substr(str.indexOf("\n")+1);
     },
     onExportFilter: function() {
+        var msgFolder = filtersimportexport.getCurrentFolder();
         var file = this.selectFile(Components.interfaces.nsIFilePicker.modeSave);
-        this.exportFilterTo(file);
+        this.exportFilterTo(msgFolder, file);
         this.alert(this.getString("exportfinishTitle"), this.getFormattedString("exportfinish", [file.path]));
     },
-    exportFilterTo: function(file) {
-        var    msgFolder = filtersimportexport.getCurrentFolder();
-        var    msgFilterURL = msgFolder.URI;
-		var	   filterList = this.currentFilterList(msgFolder,msgFilterURL);
+    exportFilterTo: function(msgFolder, file) {
+        var msgFilterURL = msgFolder.URI;
+		var	filterList = this.currentFilterList(msgFolder, msgFilterURL);
         filterList.saveToDefaultFile();
         //   for (var i = 0; i < filterList.filterCount; i++)
         //      alert (filterList.getFilterAt(i).filterName);
