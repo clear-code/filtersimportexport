@@ -318,7 +318,6 @@ var filtersimportexport = {
 
         var serverRoots = {};
         this.getAllAccounts().forEach(function processAccount(account) {
-            account = account.QueryInterface(Components.interfaces.nsIMsgAccount);
             var server = account.incomingServer;
             var type = server.type;
             if (/^(pop3|imap|none)$/.test(type)) {
@@ -399,11 +398,13 @@ var filtersimportexport = {
         var accounts = accountManager.accounts;
         var accountsArray = [];
         if (accounts instanceof Components.interfaces.nsISupportsArray) {
-            for (var i = 0, maxi = accounts.Count(); i < maxi; i++) {
+            for (var i = 0, maxi = accounts.Count(), account; i < maxi; i++) {
+                account = accounts.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgAccount);
                 accountsArray.push(accounts.GetElementAt(i));
             }
         } else if (accounts instanceof Components.interfaces.nsIArray) {
-            for (var i = 0, maxi = accounts.length; i < maxi; i++) {
+            for (var i = 0, maxi = accounts.length, account; i < maxi; i++) {
+                account = accounts.queryElementAt(i).QueryInterface(Components.interfaces.nsIMsgAccount);
                 accountsArray.push(accounts.queryElementAt(i));
             }
         }
