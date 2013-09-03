@@ -72,22 +72,23 @@ var filtersimportexportAutorun = {
     var value = selector.replace(propertyNamePartMatcher, '').replace(/\s+$/, '');
     var pattern = null;
     if (value.charAt(0) == '/') {
-      pattern = value.replace(/^\/|\/([gim]*)$/, '');
+      pattern = value.replace(/^\/|\/([gim]*)?$/g, '');
       pattern = new RegExp(pattern, RegExp.$1);
       value = null;
     }
 
+//alert([selector,propertyGetter,value,pattern].map(uneval).join('\n'));
     var foundAccount;
     filtersimportexport.getAllAccounts().some(function processAccount(account) {
       var target = account;
-      propertyGetter.forEach(function(getter) {
-        target = target[getter];
+      propertyGetter.every(function(getter) {
+        return target = target[getter];
       });
       if (!target)
         return;
 
       if ((value && target == value) ||
-          (pattern && pattern.test(value)))
+          (pattern && pattern.test(target)))
         return foundAccount = account;
     }, this);
     return foundAccount;
@@ -103,17 +104,24 @@ var filtersimportexportAutorun = {
   migrate: function filtersimportexportAutorun_migrate(fromAccount, toAccount, migrateAction) {
     var file = this.createTemporaryFile('filtersimportexport-autorun-filter');
     try {
-      filtersimportexport.exportFilterTo(fromAccount.rootFolder, file);
-      var converted = filtersimportexport.importFilterFrom(toAccount.rootFolder, file, {
+      filtersimportexport.exportFilterTo(this.getFolder(fromAccount), file);
+      var converted = filtersimportexport.importFilterFrom(this.getFolder(toAccount), file, {
         silent: true,
         migrateAction: migrateAction
       });
       return true;
     } catch(error) {
+      Components.utils.reportError(error);
       return false;
     } finally {
-      filter.remove(true);
+      file.remove(true);
     }
+  },
+  getFolder: function(account) {
+    var resource = filtersimportexport.gfilterImportExportRDF.GetResource(account.incomingServer.rootFolder.URI);
+    var msgFolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+    msgFolder.getFilterList(msgWindow);
+    return msgFolder;
   }
 };
 
