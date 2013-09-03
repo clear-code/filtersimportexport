@@ -1,6 +1,8 @@
 PACKAGE_NAME = filtersimportexport
 
-all: xpi
+.PHONY: xpi autorun
+
+all: xpi autorun
 
 xpi: buildscript/makexpi.sh
 	cp buildscript/makexpi.sh ./
@@ -9,3 +11,6 @@ xpi: buildscript/makexpi.sh
 
 buildscript/makexpi.sh:
 	git submodule update --init
+
+autorun:
+	cd autorun && make && mv *.xpi ../
