@@ -61,6 +61,9 @@ var filtersimportexportAutorun = {
   },
 
   findAccount: function filtersimportexportAutorun_findAccount(selector) {
+    if (!selector)
+      return null;
+
     var propertyNamePartMatcher = /^\s*([^\s]+)\s*=\s*/;
     var propertyGetter = selector.match(propertyNamePartMatcher);
     propertyGetter = propertyGetter && propertyGetter[1];
