@@ -213,8 +213,8 @@ var filtersimportexport = {
             this.alert(this.getString("restartreminderTitle"), this.getString("restartreminder"));
     },
     readTagsAndFiltersFile: function() {
-        var filepath = this.selectFile(Components.interfaces.nsIFilePicker.modeOpen);
-        var inputStream = this.openFile(filepath.path);
+        var file = this.selectFile(Components.interfaces.nsIFilePicker.modeOpen);
+        var inputStream = this.openFile(file.path);
         var sstream = Components.classes["@mozilla.org/scriptableinputstream;1"]
         .createInstance(Components.interfaces.nsIScriptableInputStream);
         sstream.init(inputStream);
@@ -410,6 +410,11 @@ var filtersimportexport = {
         return str.substr(str.indexOf("\n")+1);
     },
     onExportFilter: function() {
+        var file = this.selectFile(Components.interfaces.nsIFilePicker.modeSave);
+        this.exportFilterTo(file);
+        this.alert(this.getString("exportfinishTitle"), this.getFormattedString("exportfinish", [file.path]));
+    },
+    exportFilterTo: function(file) {
         var    msgFolder = filtersimportexport.getCurrentFolder();
         var    msgFilterURL = msgFolder.URI;
 		var	   filterList = this.currentFilterList(msgFolder,msgFilterURL);
@@ -422,9 +427,8 @@ var filtersimportexport = {
         data += "RootFolderUri=" + msgFilterURL + "\n";
         data += filtersimportexport.filterMailnewsHeaders + "=" + this.getHeaders() + "\n";
         
-        var filepath = this.selectFile(Components.interfaces.nsIFilePicker.modeSave);
-        var stream = this.createFile(filepath.path);
-		var path = filepath.path;
+        var stream = this.createFile(file.path);
+		var path = file.path;
         if (filterList.defaultFile.nativePath)
             var inputStream = this.openFile(filterList.defaultFile.nativePath);
         else
@@ -446,7 +450,6 @@ var filtersimportexport = {
         //alert(data);
         stream.write(data,data.length);
         stream.close();
-        this.alert(this.getString("exportfinishTitle"), this.getFormattedString("exportfinish", [path]));
     },
     tryExportTags:function (filtersStr) {
         filtersStr += filtersimportexport.MailnewsTagsMark + "=\n";
