@@ -216,7 +216,7 @@ var filtersimportexport = {
         var converted = oldFolderRoot != msgFilterURL && outFilterStr != filterStr;
         return converted;
     },
-    readTagsAndFiltersFile: functionfile() {
+    readTagsAndFiltersFile: function(file) {
         var inputStream = this.openFile(file.path);
         var sstream = Components.classes["@mozilla.org/scriptableinputstream;1"]
         .createInstance(Components.interfaces.nsIScriptableInputStream);
