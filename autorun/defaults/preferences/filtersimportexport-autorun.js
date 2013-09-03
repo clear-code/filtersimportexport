@@ -6,7 +6,7 @@
 // pref("extensions.filtersimportexport-autorun@clear-code.com.rules.KEY", true);
 // // export source
 // pref("extensions.filtersimportexport-autorun@clear-code.com.rules.KEY.from",
-//      "prettyName = /^foobar's account$/i"); // by the name
+//      "incomingServer.prettyName = /^foobar's account$/i"); // by the name
 // pref("extensions.filtersimportexport-autorun@clear-code.com.rules.KEY.from",
 //      "incomingServer.serverURI = imap://username@example.com"); // by the incoming server
 // pref("extensions.filtersimportexport-autorun@clear-code.com.rules.KEY.from",
