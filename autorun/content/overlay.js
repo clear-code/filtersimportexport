@@ -12,6 +12,15 @@ var filtersimportexportAutorun = {
     return this.prefs = ns.prefs;
   },
 
+  handleEvent: function filtersimportexportAutorun_handleEvent(event) {
+    switch (event.type) {
+      case 'load':
+        window.removeEventListener('load', this, false);
+        this.run();
+        return;
+    }
+  },
+
   run: function filtersimportexportAutorun_run() {
     var requireRestart = false;
 
@@ -72,3 +81,5 @@ var filtersimportexportAutorun = {
     }
   }
 };
+
+window.addEventListener('load', filtersimportexportAutorun, false);
