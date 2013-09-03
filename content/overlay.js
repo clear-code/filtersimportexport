@@ -131,8 +131,10 @@ var filtersimportexport = {
             //Calling getFilterList will detect any errors in rules.dat, backup the file, and alert the user
             //we need to do this because gFilterTree.setAttribute will cause rdf to call getFilterList and there is
             //no way to pass msgWindow in that case.
-            if (msgFolder && typeof gFilterListMsgWindow !=  "undefined" && gFilterListMsgWindow)
-                msgFolder.getFilterList(gFilterListMsgWindow);
+            if (msgFolder &&
+                ((typeof gFilterListMsgWindow !=  "undefined" && gFilterListMsgWindow) ||
+                 (typeof msgWindow != "undefined" && msgWindow)))
+                msgFolder.getFilterList(gFilterListMsgWindow || msgWindow);
             
         }
         // this will get the deferred to account root folder, if server is deferred
@@ -535,8 +537,8 @@ var filtersimportexport = {
             return gCurrentFilterList;
         // note, serverUri might be a newsgroup
         var filterList = null;
-        if (filtersimportexport.gFilterListMsgWindow)
-            filterList = msgFolder.getFilterList(filtersimportexport.gFilterListMsgWindow);
+        if (filtersimportexport.gFilterListMsgWindow || msgWindow)
+            filterList = msgFolder.getFilterList(filtersimportexport.gFilterListMsgWindow || msgWindow);
         if (!filterList)
             filterList = filtersimportexport.gfilterImportExportRDF.GetResource(serverUri).GetDelegate("filter", Components.interfaces.nsIMsgFilterList);
         return filterList;
