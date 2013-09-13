@@ -420,7 +420,18 @@ var filtersimportexport = {
     },
     onExportFilter: function() {
         var msgFolder = filtersimportexport.getCurrentFolder();
-        var file = this.selectFile(Components.interfaces.nsIFilePicker.modeSave);
+
+        var now = new Date();
+        var defaultFileName = this.getMyPref()
+            .getComplexValue(".export.defaultFileName", Components.interfaces.nsIPrefLocalizedString)
+            .data;
+        defaultFileName = defaultFileName
+            .replace(/\%account/gi, msgFolder.prettyName)
+            .replace(/\%yyyy/gi, now.getFullYear())
+            .replace(/\%mm/gi, ('0' + (now.getMonth() + 1)).slice(-2))
+            .replace(/\%dd/gi, ('0' + now.getDate()).slice(-2));
+
+        var file = this.selectFile(Components.interfaces.nsIFilePicker.modeSave, defaultFileName);
         this.exportFilterTo(msgFolder, file);
         this.alert(this.getString("exportfinishTitle"), this.getFormattedString("exportfinish", [file.path]));
     },
@@ -486,7 +497,7 @@ var filtersimportexport = {
         else
             return "";
     },
-    selectFile: function (mode) {
+    selectFile: function (mode, defaultFileName) {
         var fp = Components.classes["@mozilla.org/filepicker;1"]
         .createInstance(Components.interfaces.nsIFilePicker);
         
@@ -494,6 +505,8 @@ var filtersimportexport = {
         var title = this.getString("exporttitle");
         if (mode == Components.interfaces.nsIFilePicker.modeOpen)
             title = this.getString("importtitle");
+        if (defaultFileName)
+            fp.defaultString = defaultFileName;
         fp.init(window, title, mode);
         fp.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
         
