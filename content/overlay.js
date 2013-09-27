@@ -144,10 +144,12 @@ var filtersimportexport = {
     onImportFilter: function() {
         var msgFolder = filtersimportexport.getCurrentFolder();
         var file = this.selectFile(Components.interfaces.nsIFilePicker.modeOpen);
-        var converted = this.importFilterFrom(msgFolder, file);
+        var result = this.importFilterFrom(msgFolder, file);
+        if (!(result & this.IMPORT_SUCCEEDED))
+          return;
 
         var confirmStr = "";
-        if (converted)
+        if (result & this.IMPORT_CONVERTED)
             confirmStr = this.getString("finishwithwarning");
         else
             confirmStr = this.getString("importfinish");
@@ -160,6 +162,9 @@ var filtersimportexport = {
         else
             this.alert(this.getString("restartreminderTitle"), this.getString("restartreminder"));
     },
+    IMPORT_CANCELED: 0,
+    IMPORT_SUCCEEDED: 1,
+    IMPORT_CONVERTED: 2,
     importFilterFrom: function(msgFolder, file, options) {
         options = options || {};
         var msgFilterURL = msgFolder.URI;
@@ -178,7 +183,7 @@ var filtersimportexport = {
                 Components.utils.reportError(new Error(this.getString("importfailed")));
             else
                 this.alert(this.getString("importfailedTitle"), this.getString("importfailed"));
-            return;
+            return this.IMPORT_CANCELED;
         }
         var oldFolderRoot = filterStr.substr(filtersimportexport.RootFolderUriMark.length + 1,filterStr.indexOf("\n") - filterStr.indexOf("=") -1);
         
@@ -194,8 +199,8 @@ var filtersimportexport = {
 
         var outFilterStr = this.getOutFilter(filterStr, oldFolderRoot, msgFilterURL, options);
 
-        if (!options.silent && !this.canImportFilter(outFilterStr))
-            return;
+        if (!options.silent && !this.canImportFilter(outFilterStr)) 
+            return this.IMPORT_CANCELED;
 
         filterList.saveToDefaultFile();
         if (filterList.defaultFile.nativePath)
@@ -215,8 +220,10 @@ var filtersimportexport = {
         //reopen filter list
         filterList = this.currentFilterList(msgFolder,msgFilterURL);
 
-        var converted = oldFolderRoot != msgFilterURL && outFilterStr != filterStr;
-        return converted;
+        var result = this.IMPORT_SUCCEEDED;
+        if (oldFolderRoot != msgFilterURL && outFilterStr != filterStr)
+          result |= this.IMPORT_CONVERTED;
+        return result;
     },
     readTagsAndFiltersFile: function(file) {
         var inputStream = this.openFile(file.path);
