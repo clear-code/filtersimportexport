@@ -429,9 +429,16 @@ var filtersimportexport = {
         var msgFolder = filtersimportexport.getCurrentFolder();
 
         var now = new Date();
-        var defaultFileName = this.getMyPref()
-            .getComplexValue(".export.defaultFileName", Components.interfaces.nsIPrefLocalizedString)
-            .data;
+        var defaultFileName;
+        try {
+          defaultFileName = this.getMyPref()
+              .getComplexValue(".export.defaultFileName", Components.interfaces.nsIPrefLocalizedString)
+              .data;
+        } catch(e) {
+          defaultFileName = this.getMyPref()
+              .getComplexValue(".export.defaultFileName", Components.interfaces.nsISupportsString)
+              .data;
+        }
         defaultFileName = defaultFileName
             .replace(/\%account/gi, msgFolder.prettyName)
             .replace(/\%yyyy/gi, now.getFullYear())
