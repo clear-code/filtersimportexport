@@ -332,7 +332,12 @@ var filtersimportexport = {
             if (/^(pop3|imap|none)$/.test(type)) {
                 var root;
                 try {
-                    root = unescape(server.rootFolder.folderURL);
+                    try {
+                        root = unescape(server.rootFolder.folderURL);
+                    } catch(error) {
+                        var firstChild = server.rootFolder.subFolders.getNext().QueryInterface(Components.interfaces.nsIMsgFolder);
+                        root = unescape(firstChild.folderURL.replace(/[^\/]+\/?$/, ''));
+                    }
                     serverRoots[root] = unescape(server.serverURI) + '/';
                     // Application.console.log(root+' => '+serverRoots[root]);
                 } catch(error) {
