@@ -409,12 +409,12 @@ var filtersimportexport = {
         if (accounts instanceof Components.interfaces.nsISupportsArray) {
             for (var i = 0, maxi = accounts.Count(), account; i < maxi; i++) {
                 account = accounts.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgAccount);
-                accountsArray.push(accounts.GetElementAt(i));
+                accountsArray.push(account);
             }
         } else if (accounts instanceof Components.interfaces.nsIArray) {
             for (var i = 0, maxi = accounts.length, account; i < maxi; i++) {
-                account = accounts.queryElementAt(i).QueryInterface(Components.interfaces.nsIMsgAccount);
-                accountsArray.push(accounts.queryElementAt(i));
+                account = accounts.queryElementAt(i, Components.interfaces.nsIMsgAccount);
+                accountsArray.push(account);
             }
         }
         return accountsArray;
