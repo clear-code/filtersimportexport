@@ -144,10 +144,26 @@ var filtersimportexport = {
     onImportFilter: function() {
         var msgFolder = filtersimportexport.getCurrentFolder();
         var file = this.selectFile(Components.interfaces.nsIFilePicker.modeOpen);
-        var result = this.importFilterFrom(msgFolder, file);
+        var setupTask = {};
+        var result = this.importFilterFrom(msgFolder, file, {}, setupTask);
         if (!(result & this.IMPORT_SUCCEEDED))
           return;
 
+        if (setupTask.value) {
+            var self = this;
+            setupTask.value.start(
+                function onFinish() {
+                    self.onImportFiltersFinish(result);
+                },
+                function onError(failedTask) {
+                    self.alert('Failed to create folder', 'failed to create '+failedTask.folderName);
+                }
+            );
+        } else {
+            this.onImportFiltersFinish(result);
+        }
+    },
+    onImportFiltersFinish: function(result) {
         var confirmStr = "";
         if (result & this.IMPORT_CONVERTED)
             confirmStr = this.getString("finishwithwarning");
@@ -165,8 +181,9 @@ var filtersimportexport = {
     IMPORT_CANCELED: 0,
     IMPORT_SUCCEEDED: 1,
     IMPORT_CONVERTED: 2,
-    importFilterFrom: function(msgFolder, file, options) {
+    importFilterFrom: function(msgFolder, file, options, outSetupTask) {
         options = options || {};
+        outSetupTask = outSetupTask || {};
         var msgFilterURL = msgFolder.URI;
         
         var filterList = this.currentFilterList(msgFolder,msgFilterURL);
@@ -199,8 +216,12 @@ var filtersimportexport = {
 
         var outFilterStr = this.getOutFilter(filterStr, oldFolderRoot, msgFilterURL, options);
 
-        if (!options.silent && !this.canImportFilter(outFilterStr)) 
-            return this.IMPORT_CANCELED;
+        var filtersImportability;
+        if (!options.silent) {
+            filtersImportability = this.checkFiltersImportbility(outFilterStr, msgFolder);
+            if (!filtersImportability.canImport)
+                return this.IMPORT_CANCELED;
+         }
 
         filterList.saveToDefaultFile();
         if (filterList.defaultFile.nativePath)
@@ -223,6 +244,8 @@ var filtersimportexport = {
         var result = this.IMPORT_SUCCEEDED;
         if (oldFolderRoot != msgFilterURL && outFilterStr != filterStr)
           result |= this.IMPORT_CONVERTED;
+
+        outSetupTask.value = filtersImportability && filtersImportability.setupTask;
         return result;
     },
     readTagsAndFiltersFile: function(file) {
@@ -295,7 +318,7 @@ var filtersimportexport = {
 
         return filterStr;
     },
-    canImportFilter: function(filterStr) {
+    checkFiltersImportbility: function(filterStr, msgFolder) {
         var dangerousFiltersByURL = this.collectFilterNamesForURLs(filterStr);
 
         var allNames = dangerousFiltersByURL.all;
@@ -358,10 +381,16 @@ var filtersimportexport = {
             return name in dangerousFilters;
         });
 
-        if (!dangerousFilters.length)
-            return true;
+        var result = {
+            canImport: false,
+            setupTask: null
+        };
+        if (!dangerousFilters.length) {
+            result.canImport = true;
+            return result;
+        }
 
-        var accept = false;
+        result.canImport = false;
         window.openDialog(
           "chrome://filtersimportexport/content/confirmImportMissingDestinations.xul",
           "_blank",
@@ -369,10 +398,16 @@ var filtersimportexport = {
           this.getMyPref().getIntPref(".missingDestinationAction"),
           dangerousFilters.join("\n"),
           function() {
-            accept = true;
+            result.canImport = true;
           }
         );
-        return accept;
+        if (result.canImport) {
+            result.setupTask = this.setupFolderCreatorFromURLs(
+                Object.keys(dangerousFiltersByURL).sort().reverse(),
+                msgFolder.rootFolder
+            );
+        }
+        return result;
     },
     collectFilterNamesForURLs: function(filterStr) {
         var UConv = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
@@ -429,6 +464,117 @@ var filtersimportexport = {
     },
     consumeLine: function(str) {
         return str.substr(str.indexOf("\n")+1);
+    },
+    setupFolderCreatorFromURLs: function(urls, root) {
+        var rootURI = unescape(root.URI);
+        var tasks = [];
+        urls.forEach(function(url) {
+            this.createFolderFromURL(url, rootURI, root, tasks);
+        }, this);
+
+        var manager = {
+            tasks: tasks,
+            retryCount: 0,
+            maxRetry: 100,
+            interval: 100,
+            canStart: function() {
+                return this.tasks.length > 0;
+            },
+            start: function(onFinish, onError) {
+                if (typeof onFinish == 'function')
+                    this.onFinish = onFinish;
+                if (typeof onError == 'function')
+                    this.onError = onError;
+                this.timer = setInterval(function(self) {
+                    self.process();
+                }, this.interval, this);
+            },
+            stop: function() {
+                if (this.timer) {
+                    clearInterval(this.timer);
+                    this.timer = null;
+                }
+            },
+            process: function() {
+                if (!this.tasks.length) {
+                    this.stop();
+                    this.onFinish();
+                    return;
+                }
+                if (this.retryCount >= this.maxRetry) {
+                    this.stop();
+                    this.onError(this.tasks[0]);
+                    return;
+                }
+                var task = this.tasks[0];
+                var succeeded = false;
+                try {
+                    succeeded = task();
+                } catch(error) {
+                    Components.utils.reportError(error);
+                }
+                if (succeeded) {
+                    this.tasks.shift();
+                    this.retryCount = 0;
+                } else {
+                    this.retryCount++;
+                }
+            },
+            onError: function(failedTask) {},
+            onFinish: function() {}
+        };
+        return manager;
+    },
+    createFolderFromURL: function(url, rootURI, root, tasks) {
+      try {
+        var parentURL = url.split('/');
+        var name = parentURL.pop();
+        parentURL = parentURL.join('/');
+
+        var UConv = Components.classes['@mozilla.org/intl/scriptableunicodeconverter'].getService(Components.interfaces.nsIScriptableUnicodeConverter);
+        UConv.isInternal = true; // required to use x-imap4-modified-utf7
+        UConv.charset = 'x-imap4-modified-utf7';
+        name = UConv.ConvertToUnicode(name);
+
+        if (parentURL && parentURL != rootURI)
+            this.createFolderFromURL(parentURL, rootURI, root, tasks);
+        var self = this;
+        var task = function() {
+            var existingFolder = self.findFolderFromURL(url, root);
+            if (existingFolder)
+                return true;
+
+            parent = self.findFolderFromURL(unescape(parentURL), root);
+            if (!parent)
+                return false;
+            dump('CREATE '+name+' INTO '+parent.URI+'\n');
+            parent.createSubfolder(name, filtersimportexport.gFilterListMsgWindow || msgWindow);
+            return true;
+        };
+        task.folderName = name;
+        task.url = url;
+        tasks.push(task);
+      } catch(e) {
+        dump(url+' / '+e+'\n');
+      }
+    },
+    findFolderFromURL: function(url, parent) {
+        if (unescape(parent.URI) == url)
+            return parent;
+        try {
+            var folder;
+            var found;
+            var folders = parent.subFolders;
+            while (folders.hasMoreElements()) {
+                folder = folders.getNext().QueryInterface(Components.interfaces.nsIMsgFolder);
+                found = this.findFolderFromURL(url, folder);
+                if (found)
+                    return found;
+            }
+        } catch(error) {
+            Components.utils.reportError(error);
+        }
+        return null;
     },
     onExportFilter: function() {
         var msgFolder = filtersimportexport.getCurrentFolder();
