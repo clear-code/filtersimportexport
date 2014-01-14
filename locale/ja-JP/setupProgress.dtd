@@ -1,0 +1,6 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!ENTITY setupProgress.title    "振り分け先フォルダを作成中...">
+<!ENTITY setupProgress.message1 "振り分け先のフォルダを作成しています。">
+<!ENTITY setupProgress.message2 "しばらくお待ち下さい...">

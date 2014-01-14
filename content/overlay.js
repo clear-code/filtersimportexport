@@ -150,15 +150,29 @@ var filtersimportexport = {
           return;
 
         if (setupTask.value) {
+            var progressWindow = openDialog(
+                "chrome://filtersimportexport/content/setupProgress.xul",
+                "_blank",
+                "chrome,dialog=no,centerscreen=yes,dependent=yes,minimizable=no," +
+                  "fullscreen=no,titlebar=no,alwaysRaised=yes,close=no"
+              );
             var self = this;
-            setupTask.value.start(
-                function onFinish() {
+            setupTask.value.start({
+                onFinish: function() {
+                    progressWindow.close();
                     self.onImportFiltersFinish(result);
                 },
-                function onError(failedTask) {
-                    self.alert('Failed to create folder', 'failed to create '+failedTask.folderName);
+                onError: function(failedTask) {
+                    progressWindow.close();
+                    self.alert("Failed to create folder",
+                               "failed to create "+failedTask.folderName);
+                },
+                onProgress: function(progress) {
+                    var bar = progressWindow.document.getElementById("progressbar");
+                    if (bar)
+                        bar.value = progress;
                 }
-            );
+            });
         } else {
             this.onImportFiltersFinish(result);
         }
@@ -474,17 +488,21 @@ var filtersimportexport = {
 
         var manager = {
             tasks: tasks,
+            totalTasksCount: tasks.length,
             retryCount: 0,
             maxRetry: 100,
             interval: 100,
             canStart: function() {
                 return this.tasks.length > 0;
             },
-            start: function(onFinish, onError) {
-                if (typeof onFinish == 'function')
-                    this.onFinish = onFinish;
-                if (typeof onError == 'function')
-                    this.onError = onError;
+            start: function(callbacks) {
+                callbacks = callbacks || {};
+                if (typeof callbacks.onFinish == 'function')
+                    this.onFinish = callbacks.onFinish;
+                if (typeof callbacks.onError == 'function')
+                    this.onError = callbacks.onError;
+                if (typeof callbacks.onProgress == 'function')
+                    this.onProgress = callbacks.onProgress;
                 this.timer = setInterval(function(self) {
                     self.process();
                 }, this.interval, this);
@@ -506,6 +524,8 @@ var filtersimportexport = {
                     this.onError(this.tasks[0]);
                     return;
                 }
+                var progress = 100 - Math.round(this.tasks.length / this.totalTasksCount * 100);
+                this.onProgress(progress);
                 var task = this.tasks[0];
                 var succeeded = false;
                 try {
@@ -521,7 +541,8 @@ var filtersimportexport = {
                 }
             },
             onError: function(failedTask) {},
-            onFinish: function() {}
+            onFinish: function() {},
+            onProgress: function(progress) {}
         };
         return manager;
     },
