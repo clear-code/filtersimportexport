@@ -169,7 +169,7 @@ var filtersimportexport = {
         options = options || {};
         var msgFilterURL = msgFolder.URI;
         
-		var filterList = this.currentFilterList(msgFolder,msgFilterURL);
+        var filterList = this.currentFilterList(msgFolder,msgFilterURL);
         filterList.saveToDefaultFile();
         
         var tagsAndFilterStr = this.readTagsAndFiltersFile(file, options.silent);
@@ -249,12 +249,12 @@ var filtersimportexport = {
         var line = this.getLine(str);
         if (line.substr(0,filtersimportexport.MailnewsTagsMark.length) == filtersimportexport.MailnewsTagsMark)
         {
-        	str = this.consumeLine(str);
-			line = this.getLine(str);
-			while (line.substr(0,filtersimportexport.RootFolderUriMark.length) != filtersimportexport.RootFolderUriMark)
-			{
-				//using indexes instead of split because of the possibility 
-				//that a tag name has an equals character
+            str = this.consumeLine(str);
+            line = this.getLine(str);
+            while (line.substr(0,filtersimportexport.RootFolderUriMark.length) != filtersimportexport.RootFolderUriMark)
+            {
+                //using indexes instead of split because of the possibility 
+                //that a tag name has an equals character
                 //ignore lines not start with mailnews.tags
                 if (line.indexOf("mailnews.tags")==0)
                 {
@@ -263,11 +263,11 @@ var filtersimportexport = {
                     try { root.setCharPref(key, tagvalue); } // set the pref
                     catch (e) { return null; }
                 }
-				str = this.consumeLine(str);
-				line = this.getLine(str);
-			}
-			// save changes to preference file
-			prefs.savePrefFile(null);
+                str = this.consumeLine(str);
+                line = this.getLine(str);
+            }
+            // save changes to preference file
+            prefs.savePrefFile(null);
         }
         return str;
     },
@@ -456,7 +456,7 @@ var filtersimportexport = {
     },
     exportFilterTo: function(msgFolder, file) {
         var msgFilterURL = msgFolder.URI;
-		var	filterList = this.currentFilterList(msgFolder, msgFilterURL);
+        var    filterList = this.currentFilterList(msgFolder, msgFilterURL);
         filterList.saveToDefaultFile();
         //   for (var i = 0; i < filterList.filterCount; i++)
         //      alert (filterList.getFilterAt(i).filterName);
@@ -467,7 +467,7 @@ var filtersimportexport = {
         data += filtersimportexport.filterMailnewsHeaders + "=" + this.getHeaders() + "\n";
         
         var stream = this.createFile(file.path);
-		var path = file.path;
+        var path = file.path;
         if (filterList.defaultFile.nativePath)
             var inputStream = this.openFile(filterList.defaultFile.nativePath);
         else
@@ -492,25 +492,25 @@ var filtersimportexport = {
     },
     tryExportTags:function (filtersStr) {
         filtersStr += filtersimportexport.MailnewsTagsMark + "=\n";
-		var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-					  .getService(Components.interfaces.nsIPrefService);
-		var branch = prefs.getBranch("mailnews.tags.");
-		var children = branch.getChildList("", {});
+        var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                      .getService(Components.interfaces.nsIPrefService);
+        var branch = prefs.getBranch("mailnews.tags.");
+        var children = branch.getChildList("", {});
         var hasCustomizedTag = false;
-		for (index in children) {
-			try {
-				var tag = children[index];
+        for (index in children) {
+            try {
+                var tag = children[index];
                 if (tag.indexOf("$")==0) //skip the default tags
                     continue;
-				var value = branch.getCharPref(tag);
-				filtersStr += "mailnews.tags." + tag + filtersimportexport.TagSep + value + "\n";
+                var value = branch.getCharPref(tag);
+                filtersStr += "mailnews.tags." + tag + filtersimportexport.TagSep + value + "\n";
                 hasCustomizedTag = true;
-			}
-			catch (e) {
-				if (e.name != "NS_ERROR_UNEXPECTED" || tag != "version")
-					alert("Uh oh, not able to save a tag.");
-			}
-		}
+            }
+            catch (e) {
+                if (e.name != "NS_ERROR_UNEXPECTED" || tag != "version")
+                    alert("Uh oh, not able to save a tag.");
+            }
+        }
         if (hasCustomizedTag)
             return filtersStr;
         else
