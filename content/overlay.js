@@ -229,7 +229,6 @@ var filtersimportexport = {
         }
 
         var outFilterStr = this.getOutFilter(filterStr, oldFolderRoot, msgFilterURL, options);
-
         var filtersImportability;
         if (!options.silent) {
             filtersImportability = this.checkFiltersImportbility(outFilterStr, msgFolder);
@@ -310,9 +309,10 @@ var filtersimportexport = {
     },
     getOutFilter: function(filterStr, oldFolderRoot, newFolderRoot, options) {
         options = options || {};
-        var reg = new RegExp(oldFolderRoot,"g");
+        var ruleMatcher = oldFolderRoot.replace(/\(/g, "\\(").replace(/\)/g, "\\)") + "([^\"]*)";
+        var ruleMatcher = new RegExp(ruleMatcher, "gm");
         if (oldFolderRoot == newFolderRoot ||
-            !reg.test(filterStr))
+            !ruleMatcher.test(filterStr))
             return filterStr;
 
         var useGivenOption = 'migrateAction' in options;
@@ -325,7 +325,21 @@ var filtersimportexport = {
           case 1: // migrate
             if (!useGivenOption && migrateAction == 1)
                 this.alert(this.getString("trymigrationTitle"), this.getString("trymigration"));
-            return filterStr.replace(reg, newFolderRoot);
+            var self = this;
+            var oldIsImap = oldFolderRoot.indexOf('imap:') == 0;
+            var newIsImap = newFolderRoot.indexOf('imap:') == 0;
+            filterStr = filterStr.replace(ruleMatcher, function(matched) {
+              var parts = matched.split(oldFolderRoot);
+              var path = parts[1];
+              if (oldIsImap != newIsImap) {
+                if (oldIsImap) {
+                  path = self.convertIMAPPathToLocalPath(path);
+                } else {
+                  path = self.convertLocalPathToIMAPPath(path);
+                }
+              }
+              return newFolderRoot + path;
+            });
           default:
             break;
         }
@@ -546,26 +560,68 @@ var filtersimportexport = {
         };
         return manager;
     },
+    convertIMAPPathToLocalPath: function(path) {
+        var parts = path.split('/');
+        return parts.map(function(part) {
+            return this.encodeLocalPathPart(this.decodeIMAPPathPart(part));
+        }, this).join('/');
+    },
+    convertLocalPathToIMAPPath: function(path) {
+        var parts = path.split('/');
+        return parts.map(function(part) {
+            return this.encodeIMAPPathPart(this.decodeLocalPathPart(part));
+        }, this).join('/');
+    },
+    encodeIMAPPathPart: function(part) {
+        var UConv = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+                              .getService(Components.interfaces.nsIScriptableUnicodeConverter);
+        UConv.isInternal = true; // required to use x-imap4-modified-utf7
+        UConv.charset = "x-imap4-modified-utf7";
+        return UConv.ConvertFromUnicode(part);
+    },
+    decodeIMAPPathPart: function(part) {
+        var UConv = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+                              .getService(Components.interfaces.nsIScriptableUnicodeConverter);
+        UConv.isInternal = true; // required to use x-imap4-modified-utf7
+        UConv.charset = "x-imap4-modified-utf7";
+        return UConv.ConvertToUnicode(part);
+    },
+    encodeLocalPathPart: function(part) {
+        var UConv = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+                              .getService(Components.interfaces.nsIScriptableUnicodeConverter);
+        UConv.charset = "UTF-8";
+        part = UConv.ConvertFromUnicode(part);
+        return escape(part);
+    },
+    decodeLocalPathPart: function(part) {
+        part = unescape(part);
+        var UConv = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+                              .getService(Components.interfaces.nsIScriptableUnicodeConverter);
+        UConv.charset = "UTF-8";
+        return UConv.ConvertToUnicode(part);
+    },
     createFolderFromURL: function(url, rootURI, root, tasks) {
       try {
         var parentURL = url.split('/');
         var name = parentURL.pop();
         parentURL = parentURL.join('/');
 
-        var UConv = Components.classes['@mozilla.org/intl/scriptableunicodeconverter'].getService(Components.interfaces.nsIScriptableUnicodeConverter);
-        UConv.isInternal = true; // required to use x-imap4-modified-utf7
-        UConv.charset = 'x-imap4-modified-utf7';
-        name = UConv.ConvertToUnicode(name);
+        if (/&[^-]+-/.test(name)) {
+            name = this.decodeIMAPPathPart(name);
+        } else {
+            name = this.decodeLocalPathPart(name);
+        }
 
         if (parentURL && parentURL != rootURI)
             this.createFolderFromURL(parentURL, rootURI, root, tasks);
+
         var self = this;
         var task = function() {
             var existingFolder = self.findFolderFromURL(url, root);
             if (existingFolder)
                 return true;
 
-            parent = self.findFolderFromURL(unescape(parentURL), root);
+            parent = self.findFolderFromURL(parentURL, root);
             if (!parent)
                 return false;
             dump('CREATE '+name+' INTO '+parent.URI+'\n');
@@ -580,7 +636,7 @@ var filtersimportexport = {
       }
     },
     findFolderFromURL: function(url, parent) {
-        if (unescape(parent.URI) == url)
+        if (unescape(parent.URI) == unescape(url))
             return parent;
         try {
             var folder;
