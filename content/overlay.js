@@ -432,7 +432,7 @@ var filtersimportexport = {
         if (result.canImport) {
             result.setupTask = this.setupFolderCreatorFromURLs(
                 Object.keys(dangerousFiltersByURL).sort().reverse(),
-                msgFolder.rootFolder
+                this.getAllExistingFolders()
             );
         }
         return result;
@@ -487,17 +487,43 @@ var filtersimportexport = {
         }
         return accountsArray;
     },
+    getAllExistingFolders: function() {
+        var accounts = this.getAllAccounts();
+        var folders = {};
+        accounts.forEach(function(account) {
+          var root = account.incomingServer.rootFolder;
+          folders[unescape(root.URI)] = root;
+
+          var descendants;
+          var folder;
+          if ('descendants' in root) { // Thunderbird 24
+            descendants = root.descendants;
+            for (var i = 0, maxi = descendants.length; i < maxi; i++) {
+              folder = descendants.queryElementAt(i, Components.interfaces.nsIMsgFolder);
+              folders[unescape(folder.URI)] = folder;
+            }
+          } else { // Thunderbird 17 or olders
+            descendants = Cc['@mozilla.org/supports-array;1']
+                            .createInstance(Components.interfaces.nsISupportsArray);
+            root.ListDescendents(descendants);
+            for (var i = 0, maxi = descendants.Count(); i < maxi; i++) {
+              folder = descendants.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgFolder);
+              folders[unescape(folder.URI)] = folder;
+            }
+          }
+        });
+        return folders;
+    },
     getLine: function(str) {
         return str.substr(0, str.indexOf("\n"));
     },
     consumeLine: function(str) {
         return str.substr(str.indexOf("\n")+1);
     },
-    setupFolderCreatorFromURLs: function(urls, root) {
-        var rootURI = unescape(root.URI);
+    setupFolderCreatorFromURLs: function(urls, existingFolders) {
         var tasks = [];
         urls.forEach(function(url) {
-            this.createFolderFromURL(url, rootURI, root, tasks);
+            this.createFolderFromURL(url, existingFolders, tasks);
         }, this);
 
         var manager = {
@@ -600,7 +626,7 @@ var filtersimportexport = {
         UConv.charset = "UTF-8";
         return UConv.ConvertToUnicode(part);
     },
-    createFolderFromURL: function(url, rootURI, root, tasks) {
+    createFolderFromURL: function(url, existingFolders, tasks) {
       try {
         var parentURL = url.split('/');
         var name = parentURL.pop();
@@ -612,16 +638,18 @@ var filtersimportexport = {
             name = this.decodeLocalPathPart(name);
         }
 
-        if (parentURL && parentURL != rootURI)
-            this.createFolderFromURL(parentURL, rootURI, root, tasks);
+        if (parentURL && !(parentURL in existingFolders))
+            this.createFolderFromURL(parentURL, existingFolders, tasks);
 
+//dump('reserve: '+url+'\n');
         var self = this;
         var task = function() {
-            var existingFolder = self.findFolderFromURL(url, root);
+            var existingFolder = self.findFolderFromURL(url, existingFolders);
             if (existingFolder)
                 return true;
 
-            parent = self.findFolderFromURL(parentURL, root);
+//dump('create: '+url+'\n');
+            parent = self.findFolderFromURL(parentURL, existingFolders);
             if (!parent)
                 return false;
             dump('CREATE '+name+' INTO '+parent.URI+'\n');
@@ -636,7 +664,21 @@ var filtersimportexport = {
       }
     },
     findFolderFromURL: function(url, parent) {
-        if (unescape(parent.URI) == unescape(url))
+        var unescapedURL = unescape(url);
+        if (!(parent instanceof Components.interfaces.nsIMsgFolder)) {
+          var existingFolders = parent;
+          var root;
+          Object.keys(existingFolders).some(function(folderURL) {
+            if (unescapedURL.indexOf(folderURL) == 0) {
+              root = existingFolders[folderURL];
+              return true;
+            }
+            return false;
+          });
+          parent = root;
+        }
+
+        if (unescape(parent.URI) == unescapedURL)
             return parent;
         try {
             var folder;
