@@ -344,7 +344,10 @@ var filtersimportexport = {
                   path = self.sanitizeLocalPath(path);
                 }
               }
-              return newFolderRoot + path;
+              var migrated = newFolderRoot + path;
+              if (matched != migrated)
+                Application.console.log("migrate\n" + matched + "\n" + migrated);
+              return migrated;
             });
           default:
             break;
