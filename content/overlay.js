@@ -242,12 +242,17 @@ var filtersimportexport = {
         else
             var stream = this.createFile(filterList.defaultFile.path);
                   
-        var filterService = Components.classes["@mozilla.org/messenger/services/filters;1"].getService(Components.interfaces.nsIMsgFilterService);                  
+        var filterService = Components.classes["@mozilla.org/messenger/services/filters;1"]
+        .getService(Components.interfaces.nsIMsgFilterService);                  
         
         //close the filter list
         if (filterService && filterService.CloseFilterList)
             filterService.CloseFilterList(filterList);
         
+        var UConv = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+        .getService(Components.interfaces.nsIScriptableUnicodeConverter);
+        UConv.charset = "UTF-8";
+        outFilterStr = UConv.ConvertFromUnicode(outFilterStr);
         stream.write(outFilterStr, outFilterStr.length);
         stream.close();
         
@@ -263,17 +268,14 @@ var filtersimportexport = {
     },
     readTagsAndFiltersFile: function(file) {
         var inputStream = this.openFile(file.path);
-        var sstream = Components.classes["@mozilla.org/scriptableinputstream;1"]
-        .createInstance(Components.interfaces.nsIScriptableInputStream);
-        sstream.init(inputStream);
-        var str = sstream.read(4096);
-        var tagsAndFilterStr = "";
-        while (str.length > 0) {
-            tagsAndFilterStr += str;
-            str = sstream.read(4096);
-        }
-        sstream.close();
-        inputStream.close();
+        var converterStream = Components.classes["@mozilla.org/intl/converter-input-stream;1"]
+                .createInstance(Components.interfaces.nsIConverterInputStream);
+        var buffer = inputStream.available();
+        converterStream.init(inputStream, "UTF-8", buffer, converterStream.DEFAULT_REPLACEMENT_CHARACTER);
+        var out = { value : null };
+        converterStream.readString(inputStream.available(), out);
+        converterStream.close();
+        var tagsAndFilterStr = out.value;
         return tagsAndFilterStr;
     },
     tryImportTags: function(str) {
@@ -447,11 +449,6 @@ var filtersimportexport = {
         return result;
     },
     collectFilterNamesForURLs: function(filterStr) {
-        var UConv = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
-        .getService(Components.interfaces.nsIScriptableUnicodeConverter);
-        UConv.charset = "UTF-8";
-        filterStr = UConv.ConvertToUnicode(filterStr);
-
         var filterNamesForURLs = {};
         var allNames = [];
 
