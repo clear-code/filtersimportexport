@@ -676,7 +676,6 @@ var filtersimportexport = {
             parent = self.findFolderFromURL(parentURL, existingFolders);
             if (!parent)
                 return false;
-            dump('CREATE '+name+' INTO '+parent.URI+'\n');
             parent.createSubfolder(name, filtersimportexport.gFilterListMsgWindow || msgWindow);
             return true;
         };
@@ -684,7 +683,7 @@ var filtersimportexport = {
         task.url = url;
         tasks.push(task);
       } catch(e) {
-        dump(url+' / '+e+'\n');
+        Application.console.reportError(url+' / '+e);
       }
     },
     findFolderFromURL: function(url, parent) {
