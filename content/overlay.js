@@ -601,7 +601,10 @@ var filtersimportexport = {
     sanitizeIMAPPath: function(path) {
         var parts = path.split('/');
         return parts.map(function(part) {
-            return this.encodeIMAPPathPart(this.decodeIMAPPathPart(part));
+            // Don't decode non-encoded string! decodeIMAPPartPath can break non-ASCII Unicode strings.
+            if (/&[^-]+-/.test(part))
+              part = this.decodeIMAPPathPart(part);
+            return this.encodeIMAPPathPart(part);
         }, this).join('/');
     },
     convertLocalPathToIMAPPath: function(path) {
