@@ -337,6 +337,12 @@ var filtersimportexport = {
                 } else {
                   path = self.convertLocalPathToIMAPPath(path);
                 }
+              } else {
+                if (oldIsImap) {
+                  path = self.sanitizeIMAPPath(path);
+                } else {
+                  path = self.sanitizeLocalPath(path);
+                }
               }
               return newFolderRoot + path;
             });
@@ -592,10 +598,22 @@ var filtersimportexport = {
             return this.encodeLocalPathPart(this.decodeIMAPPathPart(part));
         }, this).join('/');
     },
+    sanitizeIMAPPath: function(path) {
+        var parts = path.split('/');
+        return parts.map(function(part) {
+            return this.encodeIMAPPathPart(this.decodeIMAPPathPart(part));
+        }, this).join('/');
+    },
     convertLocalPathToIMAPPath: function(path) {
         var parts = path.split('/');
         return parts.map(function(part) {
             return this.encodeIMAPPathPart(this.decodeLocalPathPart(part));
+        }, this).join('/');
+    },
+    sanitizeLocalPath: function(path) {
+        var parts = path.split('/');
+        return parts.map(function(part) {
+            return this.encodeLocalPathPart(this.decodeLocalPathPart(part));
         }, this).join('/');
     },
     encodeIMAPPathPart: function(part) {
@@ -603,7 +621,10 @@ var filtersimportexport = {
                               .getService(Components.interfaces.nsIScriptableUnicodeConverter);
         UConv.isInternal = true; // required to use x-imap4-modified-utf7
         UConv.charset = "x-imap4-modified-utf7";
-        return UConv.ConvertFromUnicode(part);
+        var padding = " "; // this is required to finish non-ASCII string completely!
+        part = UConv.ConvertFromUnicode(part + padding);
+        part = part.substring(0, part.length - padding.length);
+        return part;
     },
     decodeIMAPPathPart: function(part) {
         var UConv = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
@@ -641,14 +662,14 @@ var filtersimportexport = {
         if (parentURL && !(parentURL in existingFolders))
             this.createFolderFromURL(parentURL, existingFolders, tasks);
 
-//dump('reserve: '+url+'\n');
+        Application.console.log('reserve to create "' + url + '"');
         var self = this;
         var task = function() {
             var existingFolder = self.findFolderFromURL(url, existingFolders);
             if (existingFolder)
                 return true;
 
-//dump('create: '+url+'\n');
+            Application.console.log('creating "' + name + '" in "' + parentURL + '"');
             parent = self.findFolderFromURL(parentURL, existingFolders);
             if (!parent)
                 return false;
