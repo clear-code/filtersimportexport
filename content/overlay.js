@@ -683,7 +683,7 @@ var filtersimportexport = {
         task.url = url;
         tasks.push(task);
       } catch(e) {
-        Application.console.reportError(url+' / '+e);
+        Components.utils.reportError(url+' / '+e);
       }
     },
     findFolderFromURL: function(url, parent) {
