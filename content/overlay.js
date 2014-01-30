@@ -509,7 +509,7 @@ var filtersimportexport = {
               folders[unescape(folder.URI)] = folder;
             }
           } else { // Thunderbird 17 or olders
-            descendants = Cc['@mozilla.org/supports-array;1']
+            descendants = Components.classes['@mozilla.org/supports-array;1']
                             .createInstance(Components.interfaces.nsISupportsArray);
             root.ListDescendents(descendants);
             for (var i = 0, maxi = descendants.Count(); i < maxi; i++) {
