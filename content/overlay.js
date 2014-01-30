@@ -667,6 +667,7 @@ var filtersimportexport = {
 
         Application.console.log('reserve to create "' + url + '"');
         var self = this;
+        // create folders asynchronously, because synchronous operations can fail on IMAP servers.
         var task = function() {
             var existingFolder = self.findFolderFromURL(url, existingFolders);
             if (existingFolder)
