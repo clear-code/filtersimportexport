@@ -79,7 +79,6 @@ var filtersimportexportAutorun = {
       value = null;
     }
 
-    console.log('findAccount: ', JSON.stringify({selector,propertyGetter,value,pattern}));
     var foundAccount;
     filtersimportexport.getAllAccounts().some(function processAccount(account) {
       var target = account;
@@ -93,7 +92,6 @@ var filtersimportexportAutorun = {
           (pattern && pattern.test(target)))
         return foundAccount = account;
     }, this);
-    console.log('findAccount: ', JSON.stringify({selector,propertyGetter,value,pattern,foundAccount}));
     return foundAccount;
   },
 
