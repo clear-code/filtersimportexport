@@ -141,9 +141,9 @@ var filtersimportexport = {
         //msgFolder = msgFolder.server.rootMsgFolder;
         return msgFolder;
     },
-    onImportFilter: function() {
+    onImportFilter: async function() {
         var msgFolder = filtersimportexport.getCurrentFolder();
-        var file = this.selectFile(Components.interfaces.nsIFilePicker.modeOpen);
+        var file = await this.selectFile(Components.interfaces.nsIFilePicker.modeOpen);
         var setupTask = {};
         var result = this.importFilterFrom(msgFolder, file, {}, setupTask);
         if (!(result & this.IMPORT_SUCCEEDED))
@@ -719,7 +719,7 @@ var filtersimportexport = {
         }
         return null;
     },
-    onExportFilter: function() {
+    onExportFilter: async function() {
         var msgFolder = filtersimportexport.getCurrentFolder();
 
         var now = new Date();
@@ -739,7 +739,7 @@ var filtersimportexport = {
             .replace(/\%mm/gi, ('0' + (now.getMonth() + 1)).slice(-2))
             .replace(/\%dd/gi, ('0' + now.getDate()).slice(-2));
 
-        var file = this.selectFile(Components.interfaces.nsIFilePicker.modeSave, defaultFileName);
+        var file = await this.selectFile(Components.interfaces.nsIFilePicker.modeSave, defaultFileName);
         this.exportFilterTo(msgFolder, file);
         this.alert(this.getString("exportfinishTitle"), this.getFormattedString("exportfinish", [file.path]));
     },
@@ -818,12 +818,17 @@ var filtersimportexport = {
         fp.init(window, title, mode);
         fp.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
         
-        
-        var ret = fp.show();
-        if (ret == Components.interfaces.nsIFilePicker.returnOK ||
-            ret == Components.interfaces.nsIFilePicker.returnReplace) {
-            return  fp.file;
-        }
+        return new Promise((resolve, reject) => {
+            fp.open((ret) => {
+                if (ret == Components.interfaces.nsIFilePicker.returnOK ||
+                    ret == Components.interfaces.nsIFilePicker.returnReplace) {
+                    resolve(fp.file);
+                }
+                else {
+                    resolve(null);
+                }
+            });
+        });
     },
     createFile :function (aPath) {
        // if (! netscape.security.PrivilegeManager) return null;
