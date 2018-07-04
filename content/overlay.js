@@ -346,7 +346,7 @@ var filtersimportexport = {
               }
               var migrated = newFolderRoot + path;
               if (matched != migrated)
-                Application.console.log("migrate\n" + matched + "\n" + migrated);
+                console.log("migrate\n" + matched + "\n" + migrated);
               return migrated;
             });
           default:
@@ -379,7 +379,7 @@ var filtersimportexport = {
             var url = unescape(folder.folderURL);
             if (root && root in serverRoots)
                 url = url.replace(root, serverRoots[root]);
-            // Application.console.log('folderURL = '+url);
+            // console.log('folderURL = '+url);
             if (url in dangerousFiltersByURL)
                 delete dangerousFiltersByURL[url];
             checkFolders(folder.subFolders, root);
@@ -399,7 +399,7 @@ var filtersimportexport = {
                         root = unescape(firstChild.folderURL.replace(/[^\/]+\/?$/, ''));
                     }
                     serverRoots[root] = unescape(server.serverURI) + '/';
-                    // Application.console.log(root+' => '+serverRoots[root]);
+                    // console.log(root+' => '+serverRoots[root]);
                 } catch(error) {
                     Components.utils.reportError(server.serverURI + '\n' + error);
                 }
@@ -409,7 +409,7 @@ var filtersimportexport = {
 
         var dangerousFilters = {};
         Object.keys(dangerousFiltersByURL).forEach(function(url) {
-            // Application.console.log('DANGEROUS \n'+url);
+            // console.log('DANGEROUS \n'+url);
             dangerousFiltersByURL[url].forEach(function(filterName) {
                 dangerousFilters[filterName] = true;
             });
@@ -663,7 +663,7 @@ var filtersimportexport = {
         if (parentURL && !(parentURL in existingFolders))
             this.createFolderFromURL(parentURL, existingFolders, tasks);
 
-        Application.console.log('reserve to create "' + url + '"');
+        console.log('reserve to create "' + url + '"');
         var self = this;
         // create folders asynchronously, because synchronous operations can fail on IMAP servers.
         var task = function() {
@@ -671,7 +671,7 @@ var filtersimportexport = {
             if (existingFolder)
                 return true;
 
-            Application.console.log('creating "' + name + '" in "' + parentURL + '"');
+            console.log('creating "' + name + '" in "' + parentURL + '"');
             parent = self.findFolderFromURL(parentURL, existingFolders);
             if (!parent)
                 return false;
