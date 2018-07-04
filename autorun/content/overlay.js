@@ -34,14 +34,13 @@ var filtersimportexportAutorun = {
       var toAccountSelector    = this.prefs.getPref(base + '.to');
       var toAccount            = this.findAccount(toAccountSelector);
       var migrateAction        = this.prefs.getPref(base + '.migrateAction');
-      console.log('filtersimportexportAutorun: ' + JSON.stringify({ fromAccountSelector, fromAccount, toAccountSelector, toAccount, migrateAction }));
       if (!fromAccount || !toAccount)
         return;
 
       var doneAccounts = this.prefs.getPref(base + '.done') || '';
       doneAccounts = doneAccounts.split(',');
       var accountsPair = fromAccount.key + '=>' + toAccount.key;
-      console.log('  accountsPair: ' + accountsPair);
+      console.log('filtersimportexportAutorun accountsPair: ' + accountsPair);
       if (doneAccounts.indexOf(accountsPair) > -1)
         return;
 
