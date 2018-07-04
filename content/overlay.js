@@ -836,7 +836,7 @@ var filtersimportexport = {
        // .enablePrivilege("UniversalFileAccess UniversalXPConnect");
         
         var file=Components.classes["@mozilla.org/file/local;1"]
-        .createInstance(Components.interfaces.nsILocalFile);
+        .createInstance(Components.interfaces.nsIFile);
         file.initWithPath(aPath);
         
         var fileStream = Components.classes['@mozilla.org/network/file-output-stream;1']
@@ -850,7 +850,7 @@ var filtersimportexport = {
        // .enablePrivilege("UniversalFileAccess UniversalXPConnect");
         
         var file=Components.classes["@mozilla.org/file/local;1"]
-        .createInstance(Components.interfaces.nsILocalFile);
+        .createInstance(Components.interfaces.nsIFile);
         file.initWithPath(aPath);
         
         var fileStream = Components.classes['@mozilla.org/network/file-input-stream;1']
@@ -938,7 +938,7 @@ var filtersimportexport = {
         //var filterHome = "http://www.teesoft.info/content/view/27/1/";
         var filterHome = "http://www.teesoft.info/content/view/58/56/";
         //    var filterHome = "http://www.teesoft.info";
-        var prefService = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefService);
+        var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
         var prefBranch = prefService.getBranch("filterimportexport.");
         if (!prefBranch.prefHasUserValue("last_version")) {  // new user
             prefBranch.setCharPref("last_version", filtersimportexport.CurrentVersion);
