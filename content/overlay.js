@@ -122,7 +122,7 @@ var filtersimportexport = {
         else
         {
             var serverMenu = document.getElementById("serverMenu");
-            var msgFilterURL=serverMenu.getAttribute("uri");
+            var msgFilterURL=serverMenu.getAttribute("uri") || serverMenu.getAttribute("value");
             if (!msgFilterURL)
                 msgFilterURL=document.getElementById("serverMenuPopup").getAttribute("id");
             //alert(msgFilterURL);
