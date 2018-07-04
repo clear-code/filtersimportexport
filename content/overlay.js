@@ -531,19 +531,17 @@ var filtersimportexport = {
     setupFolderCreatorFromURLs: function(urls, existingFolders) {
         var tasks = [];
         urls.forEach(function(url) {
-            this.createFolderFromURL(url, existingFolders, tasks);
+            tasks = tasks.concat(this.createFolderFromURL(url, existingFolders));
         }, this);
 
         var manager = {
             tasks: tasks,
             totalTasksCount: tasks.length,
-            retryCount: 0,
-            maxRetry: 100,
             interval: 100,
-            canStart: function() {
+            canStart() {
                 return this.tasks.length > 0;
             },
-            start: function(callbacks) {
+            async start(callbacks) {
                 callbacks = callbacks || {};
                 if (typeof callbacks.onFinish == 'function')
                     this.onFinish = callbacks.onFinish;
@@ -551,46 +549,38 @@ var filtersimportexport = {
                     this.onError = callbacks.onError;
                 if (typeof callbacks.onProgress == 'function')
                     this.onProgress = callbacks.onProgress;
-                this.timer = setInterval(function(self) {
-                    self.process();
-                }, this.interval, this);
-            },
-            stop: function() {
-                if (this.timer) {
-                    clearInterval(this.timer);
-                    this.timer = null;
+                while (true) {
+                    const succeeded = await this.process();
+                    if (!succeeded)
+                        break;
                 }
             },
-            process: function() {
+            stop() {
+                if (this.currentTask) {
+                    this.currentTask.cancelled = true;
+                }
+            },
+            async process() {
                 if (!this.tasks.length) {
                     this.stop();
                     this.onFinish();
-                    return;
-                }
-                if (this.retryCount >= this.maxRetry) {
-                    this.stop();
-                    this.onError(this.tasks[0]);
-                    return;
+                    return false;
                 }
                 var progress = 100 - Math.round(this.tasks.length / this.totalTasksCount * 100);
                 this.onProgress(progress);
-                var task = this.tasks[0];
+                this.currentTask = this.tasks.shift();
                 var succeeded = false;
                 try {
-                    succeeded = task();
+                    succeeded = await this.currentTask();
                 } catch(error) {
                     Components.utils.reportError(error);
                 }
-                if (succeeded) {
-                    this.tasks.shift();
-                    this.retryCount = 0;
-                } else {
-                    this.retryCount++;
-                }
+                this.currentTask = null;
+                return succeeded;
             },
-            onError: function(failedTask) {},
-            onFinish: function() {},
-            onProgress: function(progress) {}
+            onError(failedTask) {},
+            onFinish() {},
+            onProgress(progress) {}
         };
         return manager;
     },
@@ -652,7 +642,8 @@ var filtersimportexport = {
         UConv.charset = "UTF-8";
         return UConv.ConvertToUnicode(part);
     },
-    createFolderFromURL: function(url, existingFolders, tasks) {
+    createFolderFromURL: function(url, existingFolders) {
+      var tasks = [];
       try {
         var parentURL = url.split('/');
         var name = parentURL.pop();
@@ -665,29 +656,38 @@ var filtersimportexport = {
         }
 
         if (parentURL && !(parentURL in existingFolders))
-            this.createFolderFromURL(parentURL, existingFolders, tasks);
+            tasks = tasks.concnat(this.createFolderFromURL(parentURL, existingFolders));
 
         console.log('reserve to create "' + url + '"');
-        var self = this;
         // create folders asynchronously, because synchronous operations can fail on IMAP servers.
-        var task = function() {
-            var existingFolder = self.findFolderFromURL(url, existingFolders);
+        var task = async () => {
+            var existingFolder = this.findFolderFromURL(url, existingFolders);
             if (existingFolder)
-                return true;
+                return;
 
             console.log('creating "' + name + '" in "' + parentURL + '"');
-            parent = self.findFolderFromURL(parentURL, existingFolders);
-            if (!parent)
-                return false;
-            parent.createSubfolder(name, filtersimportexport.gFilterListMsgWindow || msgWindow);
-            return true;
+            var start = Date.now();
+            const parent = this.findFolderFromURL(parentURL, existingFolders);
+            do {
+                parent.createSubfolder(name, filtersimportexport.gFilterListMsgWindow || msgWindow);
+                await new Promise((resolve, reject) => { setTimeout(resolve, 100); });
+                if (!this.findFolderFromURL(url, existingFolders) &&
+                    Date.now() - start < 1000 &&
+                    !task.canceled) {
+                    console.log('retrying to create "' + name + '" in "' + parentURL + '"');
+                    continue;
+                }
+                return !!parent;
+            } while (true);
         };
         task.folderName = name;
         task.url = url;
+        task.canceled = false;
         tasks.push(task);
       } catch(e) {
         Components.utils.reportError(url+' / '+e);
       }
+      return tasks;
     },
     findFolderFromURL: function(url, parent) {
         var unescapedURL = unescape(url);
