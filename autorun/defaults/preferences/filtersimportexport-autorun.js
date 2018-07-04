@@ -13,7 +13,7 @@
 //      "incomingServer.serverURI = mailbox://nobody@Local%20Folders"); // local folder account
 // // import target
 // pref("extensions.filtersimportexport-autorun@clear-code.com.rules.KEY.to",
-//      "incomingServer:user@example.com"); // the format is same to "from"
+//      "incomingServer.prettyName = user@example.com"); // the format is same to "from"
 // // migrate action for destination folders to the source account
 // // (1=migrate for the import target account, 2=as is)
 // pref("extensions.filtersimportexport-autorun@clear-code.com.rules.KEY.migrateAction", 2);
