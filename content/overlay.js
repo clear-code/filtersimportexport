@@ -142,38 +142,10 @@ var filtersimportexport = {
     onImportFilter: async function() {
         var msgFolder = filtersimportexport.getCurrentFolder();
         var file = await this.selectFile(Components.interfaces.nsIFilePicker.modeOpen);
-        var setupTask = {};
-        var result = this.importFilterFrom(msgFolder, file, {}, setupTask);
+        var result = await this.importFilterFrom(msgFolder, file);
         if (!(result & this.IMPORT_SUCCEEDED))
           return;
-
-        if (setupTask.value) {
-            var progressWindow = openDialog(
-                "chrome://filtersimportexport/content/setupProgress.xul",
-                "_blank",
-                "chrome,dialog=no,centerscreen=yes,dependent=yes,minimizable=no," +
-                  "fullscreen=no,titlebar=no,alwaysRaised=yes,close=no"
-              );
-            var self = this;
-            setupTask.value.start({
-                onFinish: function() {
-                    progressWindow.close();
-                    self.onImportFiltersFinish(result);
-                },
-                onError: function(failedTask) {
-                    progressWindow.close();
-                    self.alert("Failed to create folder",
-                               "failed to create "+failedTask.folderName);
-                },
-                onProgress: function(progress) {
-                    var bar = progressWindow.document.getElementById("progressbar");
-                    if (bar)
-                        bar.value = progress;
-                }
-            });
-        } else {
-            this.onImportFiltersFinish(result);
-        }
+        this.onImportFiltersFinish(result);
     },
     onImportFiltersFinish: function(result) {
         var confirmStr = "";
@@ -193,9 +165,7 @@ var filtersimportexport = {
     IMPORT_CANCELED: 0,
     IMPORT_SUCCEEDED: 1,
     IMPORT_CONVERTED: 2,
-    importFilterFrom: function(msgFolder, file, options, outSetupTask) {
-        options = options || {};
-        outSetupTask = outSetupTask || {};
+    importFilterFrom: async function(msgFolder, file, options = {}) {
         var msgFilterURL = msgFolder.URI;
         
         var filterList = this.currentFilterList(msgFolder,msgFilterURL);
@@ -228,7 +198,8 @@ var filtersimportexport = {
 
         var outFilterStr = this.getOutFilter(filterStr, oldFolderRoot, msgFilterURL, options);
         var filtersImportability;
-        if (!options.silent) {
+        if (!options.silent ||
+            'missingDestinationAction' in options && options.missingDestinationAction > 0) {
             filtersImportability = this.checkFiltersImportbility(outFilterStr, msgFolder, options);
             if (!filtersImportability.canImport)
                 return this.IMPORT_CANCELED;
@@ -261,7 +232,35 @@ var filtersimportexport = {
         if (oldFolderRoot != msgFilterURL && outFilterStr != filterStr)
           result |= this.IMPORT_CONVERTED;
 
-        outSetupTask.value = filtersImportability && filtersImportability.setupTask;
+        if (filtersImportability && filtersImportability.setupTask) {
+            var progressWindow = openDialog(
+                "chrome://filtersimportexport/content/setupProgress.xul",
+                "_blank",
+                "chrome,dialog=no,centerscreen=yes,dependent=yes,minimizable=no," +
+                  "fullscreen=no,titlebar=no,alwaysRaised=yes,close=no"
+              );
+            return new Promise((resolve, reject) => {
+                filtersImportability.setupTask.start({
+                    onFinish: () => {
+                        progressWindow.close();
+                        resolve(result);
+                    },
+                    onError: (failedTask) => {
+                        progressWindow.close();
+                        if (!options.silent) {
+                            this.alert("Failed to create folder",
+                                       "failed to create "+failedTask.folderName);
+                        }
+                        reject(new Error("failed to create "+failedTask.folderName));
+                    },
+                    onProgress: (progress) => {
+                        var bar = progressWindow.document.getElementById("progressbar");
+                        if (bar)
+                            bar.value = progress;
+                    }
+                });
+            });
+        }
         return result;
     },
     readTagsAndFiltersFile: function(file) {
