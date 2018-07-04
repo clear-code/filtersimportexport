@@ -478,12 +478,12 @@ var filtersimportexport = {
         .getService(Components.interfaces.nsIMsgAccountManager);
         var accounts = accountManager.accounts;
         var accountsArray = [];
-        if (accounts instanceof Components.interfaces.nsISupportsArray) {
+        if (Components.interfaces.nsISupportsArray&& accounts instanceof Components.interfaces.nsISupportsArray) {
             for (var i = 0, maxi = accounts.Count(), account; i < maxi; i++) {
                 account = accounts.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgAccount);
                 accountsArray.push(account);
             }
-        } else if (accounts instanceof Components.interfaces.nsIArray) {
+        } else if (Components.interfaces.nsIArray && accounts instanceof Components.interfaces.nsIArray) {
             for (var i = 0, maxi = accounts.length, account; i < maxi; i++) {
                 account = accounts.queryElementAt(i, Components.interfaces.nsIMsgAccount);
                 accountsArray.push(account);
