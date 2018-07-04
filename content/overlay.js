@@ -95,7 +95,7 @@ var filtersimportexport = {
         if (firstItem) {
             var serverMenu = document.getElementById("serverMenu");
             //alert(firstItem);
-            serverMenu.setAttribute("uri",firstItem);
+            serverMenu.selectedItem = document.getElementById(firstItem);
             
         }
         filtersimportexport.gFilterListMsgWindow = Components.classes["@mozilla.org/messenger/msgwindow;1"].createInstance(Components.interfaces.nsIMsgWindow);
@@ -109,7 +109,7 @@ var filtersimportexport = {
         var itemURI = selection.getAttribute('id');
         var serverMenu = document.getElementById("serverMenu");
         //alert(itemURI);
-        serverMenu.setAttribute("uri",itemURI);
+        serverMenu.setAttribute("value",itemURI);
         //alert(itemURI)
     },
     onMenuItemCommand: function() {
@@ -122,9 +122,7 @@ var filtersimportexport = {
         else
         {
             var serverMenu = document.getElementById("serverMenu");
-            var msgFilterURL=serverMenu.getAttribute("uri") || serverMenu.getAttribute("value");
-            if (!msgFilterURL)
-                msgFilterURL=document.getElementById("serverMenuPopup").getAttribute("id");
+            var msgFilterURL=serverMenu.selectedItem.getAttribute("id");
             //alert(msgFilterURL);
             var resource = filtersimportexport.gfilterImportExportRDF.GetResource(msgFilterURL);
             msgFolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
