@@ -25,6 +25,7 @@ var filtersimportexportAutorun = {
     var requireRestart = false;
 
     this.prefs.getChildren(this.ROOT + 'rules.').forEach(function(base) {
+      console.log('filtersimportexportAutorun_run: ' + base);
       if (!this.prefs.getPref(base))
         return;
 
@@ -33,16 +34,17 @@ var filtersimportexportAutorun = {
       var toAccountSelector    = this.prefs.getPref(base + '.to');
       var toAccount            = this.findAccount(toAccountSelector);
       var migrateAction        = this.prefs.getPref(base + '.migrateAction');
+      console.log('filtersimportexportAutorun: ' + JSON.stringify({ fromAccountSelector, fromAccount, toAccountSelector, toAccount, migrateAction }));
       if (!fromAccount || !toAccount)
         return;
 
       var doneAccounts = this.prefs.getPref(base + '.done') || '';
       doneAccounts = doneAccounts.split(',');
       var accountsPair = fromAccount.key + '=>' + toAccount.key;
+      console.log('  accountsPair: ' + accountsPair);
       if (doneAccounts.indexOf(accountsPair) > -1)
         return;
 
-//alert('filtersimportexportAutorun: ' + accountsPair);
       if (!this.migrate(fromAccount, toAccount, migrateAction))
         return;
 
@@ -77,7 +79,7 @@ var filtersimportexportAutorun = {
       value = null;
     }
 
-//alert([selector,propertyGetter,value,pattern].map(uneval).join('\n'));
+    console.log('findAccount: ', JSON.stringify({selector,propertyGetter,value,pattern}));
     var foundAccount;
     filtersimportexport.getAllAccounts().some(function processAccount(account) {
       var target = account;
@@ -91,6 +93,7 @@ var filtersimportexportAutorun = {
           (pattern && pattern.test(target)))
         return foundAccount = account;
     }, this);
+    console.log('findAccount: ', JSON.stringify({selector,propertyGetter,value,pattern,foundAccount}));
     return foundAccount;
   },
 
