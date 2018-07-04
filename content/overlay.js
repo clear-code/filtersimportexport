@@ -229,7 +229,7 @@ var filtersimportexport = {
         var outFilterStr = this.getOutFilter(filterStr, oldFolderRoot, msgFilterURL, options);
         var filtersImportability;
         if (!options.silent) {
-            filtersImportability = this.checkFiltersImportbility(outFilterStr, msgFolder);
+            filtersImportability = this.checkFiltersImportbility(outFilterStr, msgFolder, options);
             if (!filtersImportability.canImport)
                 return this.IMPORT_CANCELED;
          }
@@ -355,7 +355,7 @@ var filtersimportexport = {
 
         return filterStr;
     },
-    checkFiltersImportbility: function(filterStr, msgFolder) {
+    checkFiltersImportbility: function(filterStr, msgFolder, options = {}) {
         var dangerousFiltersByURL = this.collectFilterNamesForURLs(filterStr);
 
         var allNames = dangerousFiltersByURL.all;
@@ -428,6 +428,10 @@ var filtersimportexport = {
         }
 
         result.canImport = false;
+        if ('missingDestinationAction' in options && options.missingDestinationAction > 0) {
+          result.canImport = options.missingDestinationAction == 1;
+        }
+        else {
         window.openDialog(
           "chrome://filtersimportexport/content/confirmImportMissingDestinations.xul",
           "_blank",
@@ -438,6 +442,7 @@ var filtersimportexport = {
             result.canImport = true;
           }
         );
+        }
         if (result.canImport) {
             result.setupTask = this.setupFolderCreatorFromURLs(
                 Object.keys(dangerousFiltersByURL).sort().reverse(),

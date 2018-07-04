@@ -34,6 +34,7 @@ var filtersimportexportAutorun = {
       var toAccountSelector    = this.prefs.getPref(base + '.to');
       var toAccount            = this.findAccount(toAccountSelector);
       var migrateAction        = this.prefs.getPref(base + '.migrateAction');
+      var missingDestinationAction = this.prefs.getPref(base + '.missingDestinationAction');
       if (!fromAccount || !toAccount)
         return;
 
@@ -44,7 +45,7 @@ var filtersimportexportAutorun = {
       if (doneAccounts.indexOf(accountsPair) > -1)
         return;
 
-      if (!this.migrate(fromAccount, toAccount, migrateAction))
+      if (!this.migrate(fromAccount, toAccount, migrateAction, missingDestinationAction))
         return;
 
       doneAccounts.push(accountsPair);
@@ -101,13 +102,14 @@ var filtersimportexportAutorun = {
     return file;
   },
 
-  migrate: function filtersimportexportAutorun_migrate(fromAccount, toAccount, migrateAction) {
+  migrate: function filtersimportexportAutorun_migrate(fromAccount, toAccount, migrateAction, missingDestinationAction) {
     var file = this.createTemporaryFile('filtersimportexport-autorun-filter');
     try {
       filtersimportexport.exportFilterTo(this.getFolder(fromAccount), file);
       var converted = filtersimportexport.importFilterFrom(this.getFolder(toAccount), file, {
         silent: true,
-        migrateAction: migrateAction
+        migrateAction,
+        missingDestinationAction
       });
       return true;
     } catch(error) {
