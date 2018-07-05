@@ -618,6 +618,13 @@ var filtersimportexport = {
         }, this).join('/');
     },
     encodeIMAPPathPart: function(part) {
+        try { // on Thunderbird 56 and later
+            return Components.classes['@mozilla.org/charset-converter-manager;1']
+                             .getService(Components.interfaces.nsICharsetConverterManager)
+                             .unicodeToMutf7(part);
+        }
+        catch(e) {
+        }
         var UConv = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
                               .getService(Components.interfaces.nsIScriptableUnicodeConverter);
         UConv.isInternal = true; // required to use x-imap4-modified-utf7
