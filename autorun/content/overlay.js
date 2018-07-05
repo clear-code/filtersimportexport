@@ -21,13 +21,13 @@ var filtersimportexportAutorun = {
     }
   },
 
-  run: function filtersimportexportAutorun_run() {
+  run: async function filtersimportexportAutorun_run() {
     var requireRestart = false;
 
-    this.prefs.getChildren(this.ROOT + 'rules.').forEach(async function(base) {
+    for (const base of this.prefs.getChildren(this.ROOT + 'rules.')) {
       console.log('filtersimportexportAutorun_run: ' + base);
       if (!this.prefs.getPref(base))
-        return;
+        continue;
 
       var fromAccountSelector  = this.prefs.getPref(base + '.from');
       var fromAccount          = this.findAccount(fromAccountSelector);
@@ -36,23 +36,23 @@ var filtersimportexportAutorun = {
       var migrateAction        = this.prefs.getPref(base + '.migrateAction');
       var missingDestinationAction = this.prefs.getPref(base + '.missingDestinationAction');
       if (!fromAccount || !toAccount)
-        return;
+        continue;
 
       var doneAccounts = this.prefs.getPref(base + '.done') || '';
       doneAccounts = doneAccounts.split(',').filter(account => !!account);
       var accountsPair = fromAccount.key + '=>' + toAccount.key;
       console.log('filtersimportexportAutorun accountsPair: ' + accountsPair);
       if (doneAccounts.indexOf(accountsPair) > -1)
-        return;
+        continue;
 
       if (!(await this.migrate(fromAccount, toAccount, migrateAction, missingDestinationAction)))
-        return;
+        continue;
 
       doneAccounts.push(accountsPair);
       this.prefs.setPref(base + '.done', doneAccounts.join(','));
 
       requireRestart = true;
-    }, this);
+    }
 
     if (requireRestart) {
       var nsIAppStartup = Components.interfaces.nsIAppStartup;
