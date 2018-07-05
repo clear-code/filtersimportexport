@@ -24,7 +24,7 @@ var filtersimportexportAutorun = {
   run: function filtersimportexportAutorun_run() {
     var requireRestart = false;
 
-    this.prefs.getChildren(this.ROOT + 'rules.').forEach(function(base) {
+    this.prefs.getChildren(this.ROOT + 'rules.').forEach(async function(base) {
       console.log('filtersimportexportAutorun_run: ' + base);
       if (!this.prefs.getPref(base))
         return;
@@ -45,7 +45,7 @@ var filtersimportexportAutorun = {
       if (doneAccounts.indexOf(accountsPair) > -1)
         return;
 
-      if (!this.migrate(fromAccount, toAccount, migrateAction, missingDestinationAction))
+      if (!(await this.migrate(fromAccount, toAccount, migrateAction, missingDestinationAction)))
         return;
 
       doneAccounts.push(accountsPair);
@@ -102,11 +102,11 @@ var filtersimportexportAutorun = {
     return file;
   },
 
-  migrate: function filtersimportexportAutorun_migrate(fromAccount, toAccount, migrateAction, missingDestinationAction) {
+  migrate: async function filtersimportexportAutorun_migrate(fromAccount, toAccount, migrateAction, missingDestinationAction) {
     var file = this.createTemporaryFile('filtersimportexport-autorun-filter');
     try {
       filtersimportexport.exportFilterTo(this.getFolder(fromAccount), file);
-      var converted = filtersimportexport.importFilterFrom(this.getFolder(toAccount), file, {
+      var converted = await filtersimportexport.importFilterFrom(this.getFolder(toAccount), file, {
         silent: true,
         migrateAction,
         missingDestinationAction
