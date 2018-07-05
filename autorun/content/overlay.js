@@ -39,7 +39,7 @@ var filtersimportexportAutorun = {
         return;
 
       var doneAccounts = this.prefs.getPref(base + '.done') || '';
-      doneAccounts = doneAccounts.split(',');
+      doneAccounts = doneAccounts.split(',').filter(account => !!account);
       var accountsPair = fromAccount.key + '=>' + toAccount.key;
       console.log('filtersimportexportAutorun accountsPair: ' + accountsPair);
       if (doneAccounts.indexOf(accountsPair) > -1)
