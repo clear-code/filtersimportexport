@@ -6,7 +6,7 @@
 
         <em:name>Thunderbird Message Filter Import/Export Autorun</em:name>
         <em:type>2</em:type>
-        <em:version>0.1</em:version>
+        <em:version>0.2</em:version>
         <em:id>filtersimportexport-autorun@clear-code.com</em:id>
         <em:description>Runs Thunderbird Message Filter Import/Export automatically.</em:description>
         <em:creator>ClearCode Inc. (info@clear-code.com)</em:creator>
