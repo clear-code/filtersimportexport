@@ -172,12 +172,15 @@ var filtersimportexport = {
     IMPORT_SUCCEEDED: 1,
     IMPORT_CONVERTED: 2,
     importFilterFrom: async function(msgFolder, file, options = {}) {
+        console.log('importFilterFrom ', msgFolder, file, options);
         var msgFilterURL = msgFolder.URI;
         
         var filterList = this.currentFilterList(msgFolder,msgFilterURL);
         filterList.saveToDefaultFile();
+        console.log('filterList saved: ', filterList);
         
         var tagsAndFilterStr = this.readTagsAndFiltersFile(file, options.silent);
+        console.log('tagsAndFilterStr: ', tagsAndFilterStr);
         
         // read all tags line-by-line and save them.
         var filterStr = this.tryImportTags(tagsAndFilterStr);
@@ -188,6 +191,7 @@ var filtersimportexport = {
                 Components.utils.reportError(new Error(this.getString("importfailed")));
             else
                 this.alert(this.getString("importfailedTitle"), this.getString("importfailed"));
+            console.log('import canceled');
             return this.IMPORT_CANCELED;
         }
         var oldFolderRoot = filterStr.substr(filtersimportexport.RootFolderUriMark.length + 1,filterStr.indexOf("\n") - filterStr.indexOf("=") -1);
@@ -201,14 +205,19 @@ var filtersimportexport = {
             filterStr = this.consumeLine(filterStr);
             this.mergeHeaders(mailheaders);
         }
+        console.log('headers merged');
 
         var outFilterStr = this.getOutFilter(filterStr, oldFolderRoot, msgFilterURL, options);
+        console.log('outFilterStr: ', outFilterStr);
         var filtersImportability;
         if (!options.silent ||
             'missingDestinationAction' in options && options.missingDestinationAction > 0) {
             filtersImportability = this.checkFiltersImportbility(outFilterStr, msgFolder, options);
-            if (!filtersImportability.canImport)
+            console.log('filtersImportability: ', filtersImportability);
+            if (!filtersImportability.canImport) {
+                console.log('import canceled: impossible to setup folders');
                 return this.IMPORT_CANCELED;
+            }
          }
 
         filterList.saveToDefaultFile();
@@ -235,10 +244,16 @@ var filtersimportexport = {
         filterList = this.currentFilterList(msgFolder,msgFilterURL);
 
         var result = this.IMPORT_SUCCEEDED;
-        if (oldFolderRoot != msgFilterURL && outFilterStr != filterStr)
+        if (oldFolderRoot != msgFilterURL && outFilterStr != filterStr) {
           result |= this.IMPORT_CONVERTED;
+          console.log('filters are successfully imported');
+        }
+        else {
+          console.log('there is no change from old filters');
+        }
 
         if (filtersImportability && filtersImportability.setupTask) {
+            console.log('trying to prepare folders');
             var progressWindow = openDialog(
                 "chrome://filtersimportexport/content/setupProgress.xul",
                 "_blank",
@@ -249,6 +264,7 @@ var filtersimportexport = {
                 filtersImportability.setupTask.start({
                     onFinish: () => {
                         progressWindow.close();
+                        console.log('folders are prepared');
                         resolve(result);
                     },
                     onError: (failedTask) => {
@@ -260,6 +276,7 @@ var filtersimportexport = {
                         reject(new Error("failed to create "+failedTask.folderName));
                     },
                     onProgress: (progress) => {
+                        console.log('progress: ', progress);
                         var bar = progressWindow.document.getElementById("progressbar");
                         if (bar)
                             bar.value = progress;
