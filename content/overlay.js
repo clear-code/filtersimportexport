@@ -140,12 +140,18 @@ var filtersimportexport = {
         return msgFolder;
     },
     onImportFilter: async function() {
+        try{
         var msgFolder = filtersimportexport.getCurrentFolder();
         var file = await this.selectFile(Components.interfaces.nsIFilePicker.modeOpen);
         var result = await this.importFilterFrom(msgFolder, file);
         if (!(result & this.IMPORT_SUCCEEDED))
           return;
         this.onImportFiltersFinish(result);
+        }
+        catch(e){
+            console.log(e);
+            throw e;
+        }
     },
     onImportFiltersFinish: function(result) {
         var confirmStr = "";
