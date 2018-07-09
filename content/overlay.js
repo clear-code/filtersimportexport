@@ -974,9 +974,7 @@ var filtersimportexport = {
         this.setHeader(newStr);
     },
     checkUpdate:function () {
-        //var filterHome = "http://www.teesoft.info/content/view/27/1/";
-        var filterHome = "http://www.teesoft.info/content/view/58/56/";
-        //    var filterHome = "http://www.teesoft.info";
+        var filterHome = "http://www.example.com/";
         var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
         var prefBranch = prefService.getBranch("filterimportexport.");
         if (!prefBranch.prefHasUserValue("last_version")) {  // new user
