@@ -1009,5 +1009,5 @@ var filtersimportexport = {
     }
 
 };
-filtersimportexport.checkUpdate();
+//filtersimportexport.checkUpdate();
 //window.addEventListener("load", function(e) { filtersimportexport.onLoad(e); }, false); 
